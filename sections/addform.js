@@ -31,28 +31,14 @@ const DATABASES = [
     ],
   },
   {
-    label: "📚 Research Pipeline",
-    id: IDS.researchPipeline,
-    titleProp: "Name",
-    fields: [
-      { name: "Status", type: "select", options: ["In progress", "Under review", "Submitted", "Published", "Blocked"] },
-    ],
-  },
-  {
-    label: "📕 UWorld Tracker",
-    id: IDS.uworldTracker,
-    titleProp: "Name",
-    fields: [
-      { name: "Date",  type: "date" },
-      { name: "Notes", type: "text" },
-    ],
-  },
-  {
     label: "🌊 WAVE Tracker",
     id: IDS.waveTracker,
     titleProp: "Name",
     fields: [
-      { name: "Status", type: "select", options: ["Not started", "In progress", "Done", "Blocked"] },
+      { name: "Component Area", type: "select", options: ["Frontend", "Backend", "Compliance", "Alerting", "Recruitment", "Finance"] },
+      { name: "Status",         type: "select", options: ["Not started", "In progress", "Done", "Blocked"] },
+      { name: "Next step",      type: "text" },
+      { name: "Notes",          type: "text" },
     ],
   },
   {
@@ -60,7 +46,8 @@ const DATABASES = [
     id: IDS.petCareLog,
     titleProp: "Name",
     fields: [
-      { name: "Date",  type: "date" },
+      { name: "Pet",  type: "select", options: ["Mimic", "Pumpkin"] },
+      { name: "Type", type: "select", options: ["Vet", "Feeding", "Shed", "Medication", "Grooming", "Note", "Husbandry"] },
       { name: "Notes", type: "text" },
     ],
   },
