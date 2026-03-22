@@ -96,32 +96,45 @@ function shiftRow(e) {
 // STEP 3
 // ─────────────────────────────────────────────────────────────────────────────
 export async function loadStep3() {
+  const t = todayStr();
   const data = await api("query", IDS.uworldTracker, {
-    sorts: [{ timestamp: "created_time", direction: "descending" }],
+    sorts: [{ property: "Date", direction: "ascending" }],
     page_size: 100,
   });
   const rows = data.results || [];
-  // Distinguish completed vs planned sessions by checking a "Type" or "Mode" property
-  const done    = rows.filter(r => !["Planned","planned"].includes(prop(r,"Type") || prop(r,"Mode") || ""));
-  const planned = rows.filter(r =>  ["Planned","planned"].includes(prop(r,"Type") || prop(r,"Mode") || ""));
-  const totalQs = done.reduce((s, r) => s + (prop(r,"Questions") || prop(r,"Qs") || 0), 0);
-  const correct = done.reduce((s, r) => s + (prop(r,"Correct") || 0), 0);
-  const lastDate = done[0] ? (prop(done[0],"Date") || prop(done[0],"Session Date")) : null;
+
+  // Rows with a Date are real sessions; rows without are planned/template rows
+  const done = rows.filter(r => prop(r, "Date") !== null);
+
+  // Total Qs done across all sessions
+  const totalQs = done.reduce((s, r) => s + (prop(r, "Qs") || 0), 0);
+
+  // Average score across sessions that have a Score value
+  const scoredRows = done.filter(r => prop(r, "Score") !== null);
+  const avgScore = scoredRows.length > 0
+    ? Math.round(scoredRows.reduce((s, r) => s + prop(r, "Score"), 0) / scoredRows.length)
+    : null;
+
+  // Today's row — used to show Subject/Qs/Notes and as the target for Score logging
+  const todayRow = done.find(r => prop(r, "Date") === t) || null;
 
   return {
-    doneSessions: done.length,
-    plannedSessions: planned.length,
     totalQs,
-    pctCorrect: totalQs > 0 ? Math.round(correct / totalQs * 100) : null,
-    lastDate,
+    avgScore,
     daysLeft: daysUntil(STEP3_DATE),
+    doneSessions: done.length,
+    todayRow: todayRow ? {
+      id: todayRow.id,
+      subject: prop(todayRow, "Subject") || "",
+      qs:      prop(todayRow, "Qs") || "",
+      notes:   prop(todayRow, "Notes") || "",
+      score:   prop(todayRow, "Score"),
+    } : null,
   };
 }
 
 export function renderStep3(d, container) {
-  const progress = d.doneSessions + d.plannedSessions > 0
-    ? Math.min(100, Math.round(d.doneSessions / (d.doneSessions + d.plannedSessions) * 100))
-    : 0;
+  const progress = Math.min(100, Math.round((d.totalQs / 3200) * 100)); // ~3200 Qs total in UWorld
 
   container.innerHTML = `
     <div class="section-title-row">
@@ -129,22 +142,115 @@ export function renderStep3(d, container) {
       <a class="see-all" href="${nlink(IDS.uworldTracker)}" target="_blank">tracker ↗</a>
     </div>
     <div class="stat-row">
-      <div class="stat-item"><span class="stat-val">${d.daysLeft}</span><span class="stat-lbl">days left</span></div>
-      <div class="stat-item"><span class="stat-val">${d.doneSessions}</span><span class="stat-lbl">sessions done</span></div>
-      ${d.pctCorrect !== null
-        ? `<div class="stat-item"><span class="stat-val">${d.pctCorrect}%</span><span class="stat-lbl">accuracy</span></div>`
-        : ""}
+      <div class="stat-item">
+        <span class="stat-val">${d.daysLeft}</span>
+        <span class="stat-lbl">days left</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">${d.totalQs.toLocaleString()}</span>
+        <span class="stat-lbl">Qs done</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">${d.avgScore !== null ? d.avgScore + "%" : "—"}</span>
+        <span class="stat-lbl">avg score</span>
+      </div>
     </div>
     <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${progress}%"></div></div>
     <div class="mini-prog-label">
-      <span>${d.doneSessions} done · ${d.plannedSessions} planned</span>
-      ${d.lastDate ? `<span>last ${fmtDate(d.lastDate)}</span>` : ""}
+      <span>${d.totalQs.toLocaleString()} Qs · ${d.doneSessions} sessions</span>
+      <span>~3,200 total</span>
     </div>
-    <div class="btn-row" style="margin-top:12px;">
-      <a class="fc-btn fc-primary" href="${nlink(IDS.uworldTracker)}" target="_blank">log session ↗</a>
-      <a class="fc-btn" href="${nlink(IDS.step3Review)}" target="_blank">study plan ↗</a>
+
+    <!-- Today's session info + log score button -->
+    <div class="step3-today-row" id="step3-today-row">
+      ${d.todayRow
+        ? `<div class="step3-today-info">
+            ${d.todayRow.subject ? `<span class="s3-subject">${d.todayRow.subject}</span>` : ""}
+            ${d.todayRow.qs      ? `<span class="s3-detail">${d.todayRow.qs} Qs</span>` : ""}
+            ${d.todayRow.notes   ? `<span class="s3-detail s3-notes">${d.todayRow.notes}</span>` : ""}
+           </div>`
+        : `<div class="step3-today-info s3-empty">no session today</div>`}
+      <button class="fc-btn fc-primary" id="step3-log-btn">
+        ${d.todayRow?.score !== null && d.todayRow?.score !== undefined
+          ? `score: ${d.todayRow.score}% ✓`
+          : "log score"}
+      </button>
+    </div>
+
+    <!-- Inline score input — hidden until button clicked -->
+    <div class="step3-score-input" id="step3-score-input" style="display:none;">
+      <input type="number" min="0" max="100" placeholder="Score %" id="step3-score-val"
+             class="form-input" style="width:90px;"/>
+      <button class="fc-btn fc-primary" id="step3-score-save">save</button>
+      <button class="fc-btn" id="step3-score-cancel">cancel</button>
+      <span class="step3-save-msg" id="step3-save-msg"></span>
     </div>
   `;
+
+  // Wire up log score flow
+  const logBtn     = document.getElementById("step3-log-btn");
+  const inputRow   = document.getElementById("step3-score-input");
+  const scoreInput = document.getElementById("step3-score-val");
+  const saveBtn    = document.getElementById("step3-score-save");
+  const cancelBtn  = document.getElementById("step3-score-cancel");
+  const saveMsg    = document.getElementById("step3-save-msg");
+
+  logBtn.addEventListener("click", () => {
+    if (!d.todayRow) {
+      // No row for today — open tracker in Notion to create one
+      window.open(nlink(IDS.uworldTracker), "_blank");
+      return;
+    }
+    inputRow.style.display = "flex";
+    logBtn.style.display = "none";
+    scoreInput.focus();
+    if (d.todayRow.score !== null) scoreInput.value = d.todayRow.score;
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    inputRow.style.display = "none";
+    logBtn.style.display = "";
+    saveMsg.textContent = "";
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    const val = parseFloat(scoreInput.value);
+    if (isNaN(val) || val < 0 || val > 100) {
+      saveMsg.textContent = "Enter 0–100";
+      saveMsg.style.color = "var(--red-500)";
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "saving…";
+    saveMsg.textContent = "";
+
+    try {
+      await api("update", d.todayRow.id, {
+        properties: {
+          Score: { number: val },
+        },
+      });
+      // Update button label in place
+      logBtn.textContent = `score: ${val}% ✓`;
+      d.todayRow.score = val;
+      inputRow.style.display = "none";
+      logBtn.style.display = "";
+      saveMsg.textContent = "";
+    } catch (err) {
+      saveMsg.textContent = `Failed: ${err.message}`;
+      saveMsg.style.color = "var(--red-500)";
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "save";
+    }
+  });
+
+  // Allow Enter key to submit
+  scoreInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") saveBtn.click();
+    if (e.key === "Escape") cancelBtn.click();
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
