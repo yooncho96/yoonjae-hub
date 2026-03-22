@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Yoonjae · Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Instrument+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ── QUICK LINKS BAR ──────────────────────────────────────────────────── -->
+<div class="quicklinks-bar">
+  <span class="ql-brand">✦</span>
+  <div class="ql-links">
+    <a href="https://utexas.zoom.us/j/87612240207?pwd=68kJDa76Kr2gieZqTblIba9BlAzsbg.1" target="_blank" class="ql-link">WAVE Zoom</a>
+    <a href="https://us06web.zoom.us/j/86213955204?pwd=WbdP1U676cKkAFS2z3bJmNR4cObymD.1" target="_blank" class="ql-link">DBT Zoom</a>
+    <a href="https://teams.microsoft.com/meet/25201649032581?p=GhxmpcwFBoRnkogJCm" target="_blank" class="ql-link">6-mo Eval</a>
+    <a href="https://www.notion.so/31ef6c38f95e8088b194c29b9ceaad09" target="_blank" class="ql-link ql-notion">Notion ↗</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <!-- Add page button — triggers the form modal -->
+    <button class="add-page-trigger" id="add-page-btn">+ add to notion</button>
+    <div class="ql-date" id="ql-date"></div>
+  </div>
+</div>
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+<div class="cc-header">
+  <div>
+    <div class="cc-greeting">Good <span id="time-of-day">morning</span>, <em>Yoonjae.</em></div>
+    <div class="cc-subhead" id="cc-subhead">Loading…</div>
+  </div>
+  <div class="cc-chips">
+    <span class="chip chip-step" id="chip-step3">Step 3 · …</span>
+    <span class="chip chip-research">JAACAP Open</span>
+    <span class="chip chip-wave">WAVE</span>
+  </div>
+</div>
+
+<!-- ── MAIN GRID ──────────────────────────────────────────────────────── -->
+<div class="cc-main">
+
+  <!-- LEFT column: schedule + psychiatry matrix -->
+  <div class="cc-col-left">
+
+    <div class="card" id="card-schedule">
+      <div class="skeleton-block" style="height:220px;"></div>
+    </div>
+
+    <div class="card" id="card-psychiatry">
+      <div class="skeleton-block" style="height:350px;"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT column: sidebar panels -->
+  <div class="cc-col-right">
+
+    <div class="card" id="card-step3">
+      <div class="skeleton-block" style="height:130px;"></div>
+    </div>
+
+    <div class="card" id="card-tasks">
+      <div class="skeleton-block" style="height:160px;"></div>
+    </div>
+
+    <div class="card" id="card-research">
+      <div class="skeleton-block" style="height:140px;"></div>
+    </div>
+
+    <!-- Wellbeing — static, no API needed -->
+    <div class="card">
+      <div class="card-label">how are you?</div>
+      <div class="wellbeing-row">
+        <div class="mood-chip" onclick="selectMood(this,'grounded')">grounded</div>
+        <div class="mood-chip" onclick="selectMood(this,'tired')">tired</div>
+        <div class="mood-chip" onclick="selectMood(this,'scattered')">scattered</div>
+        <div class="mood-chip" onclick="selectMood(this,'okay')">okay</div>
+      </div>
+      <div class="wellbeing-note" id="mood-note">Deborah on Zoom this week.</div>
+    </div>
+
+    <div class="card" id="card-pets">
+      <div class="skeleton-block" style="height:80px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="cc-footer">
+  Live from Notion · <a href="https://www.notion.so/31ef6c38f95e8088b194c29b9ceaad09" target="_blank">open command center ↗</a>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
