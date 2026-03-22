@@ -1,6 +1,17 @@
+// The base URL for all Notion API calls
 const NOTION_API = "https://api.notion.com/v1";
+
+// The version header Notion requires on every request
 const NOTION_VERSION = "2022-06-28";
 
+// Tell Vercel's runtime to parse incoming JSON request bodies automatically
+export const config = {
+  api: {
+    bodyParser: { sizeLimit: '1mb' },
+  },
+};
+
+// The headers helper also needs to exist at module level
 function headers(token) {
   return {
     "Authorization": `Bearer ${token}`,
@@ -18,30 +29,23 @@ export default async function handler(req, res) {
   const token = process.env.NOTION_TOKEN;
   if (!token) return res.status(500).json({ error: "NOTION_TOKEN not configured on Vercel" });
 
-  // All requests come in as POST with a JSON body describing the operation
-  const { op, id, body: opBody } = req.body || {};
+  const rawBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  const { op, id, body: opBody } = rawBody || {};
   if (!op) return res.status(400).json({ error: "op required" });
 
   try {
     let url, method = "GET", body;
 
     switch (op) {
-      // Fetch a single page's metadata + properties
       case "page":
         url = `${NOTION_API}/pages/${id}`;
         break;
-
-      // Fetch a page's block children (the actual content)
       case "blocks":
         url = `${NOTION_API}/blocks/${id}/children?page_size=100`;
         break;
-
-      // Fetch nested blocks (for toggles, columns, etc.)
       case "block_children":
         url = `${NOTION_API}/blocks/${id}/children?page_size=100`;
         break;
-
-      // Query a database with optional filters/sorts
       case "query":
         url = `${NOTION_API}/databases/${id}/query`;
         method = "POST";
@@ -51,14 +55,11 @@ export default async function handler(req, res) {
           page_size: opBody?.page_size || 50,
         });
         break;
-
-      // Create a new page in a database (the "add page" feature)
       case "create":
         url = `${NOTION_API}/pages`;
         method = "POST";
-        body = JSON.stringify(opBody); // caller provides full Notion page payload
+        body = JSON.stringify(opBody);
         break;
-
       default:
         return res.status(400).json({ error: `Unknown op: ${op}` });
     }
