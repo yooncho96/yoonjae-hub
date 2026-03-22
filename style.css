@@ -244,6 +244,38 @@ a:hover { opacity: 0.72; }
 .pet-name { font-size:13px; font-weight:500; flex-shrink:0; min-width:60px; }
 .pet-meta { font-size:11px; color:var(--sand-400); flex:1; }
 
+/* ── STEP 3 TODAY ROW ───────────────────────────────────────────────────── */
+.step3-today-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.step3-today-info {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  gap: 2px; padding-top: 2px;
+}
+.s3-subject {
+  font-size: 13px; font-weight: 500; color: var(--sand-800);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.s3-detail {
+  font-size: 11px; color: var(--sand-400); font-weight: 300;
+}
+.s3-notes {
+  font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.s3-empty { font-size: 12px; color: var(--sand-300); font-style: italic; font-family: 'Lora', serif; }
+
+.step3-score-input {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.step3-score-input .form-input {
+  padding: 5px 9px; font-size: 13px; height: auto;
+}
+.step3-save-msg {
+  font-size: 11px; color: var(--sand-400);
+}
+
 /* ── SKELETON ───────────────────────────────────────────────────────────── */
 .skeleton-block { background:linear-gradient(90deg,var(--sand-100) 25%,var(--sand-50) 50%,var(--sand-100) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; width:100%; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
