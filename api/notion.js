@@ -22,7 +22,14 @@ export default async function handler(req, res) {
   const token = process.env.NOTION_TOKEN;
   if (!token) return res.status(500).json({ error: "NOTION_TOKEN not configured on Vercel" });
 
-  const rawBody = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  let rawBody = req.body;
+  if (!rawBody || (typeof rawBody === "object" && Object.keys(rawBody).length === 0)) {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    rawBody = JSON.parse(Buffer.concat(chunks).toString());
+  } else if (typeof rawBody === "string") {
+    rawBody = JSON.parse(rawBody);
+  }
   const { op, id, body: opBody } = rawBody || {};
   if (!op) return res.status(400).json({ error: "op required" });
 

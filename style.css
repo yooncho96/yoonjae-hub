@@ -124,6 +124,39 @@ a:hover { opacity: 0.72; }
 .badge-off   { background:var(--sand-100);  color:var(--sand-600); }
 .badge-psych { background:var(--moss-100);  color:var(--moss-700); }
 
+/* ── KNOWLEDGE BASE TABS ────────────────────────────────────────────────── */
+.kb-tabs {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 14px; border-bottom: 0.5px solid var(--sand-200);
+  padding-bottom: 10px;
+}
+.kb-tab {
+  font-size: 11px; font-weight: 500; font-family: inherit;
+  padding: 5px 12px; border-radius: 20px; cursor: pointer;
+  border: 0.5px solid transparent; background: none;
+  color: var(--sand-400); transition: all 0.15s; white-space: nowrap;
+}
+.kb-tab:hover { background: var(--sand-100); color: var(--sand-600); }
+.kb-tab.active {
+  background: var(--sand-800); color: var(--sand-50);
+  border-color: var(--sand-800);
+}
+.kb-tab-spacer { flex: 1; }
+.kb-panel { /* no extra styles needed — just a wrapper for show/hide */ }
+
+/* Psychopharm-specific: 3 columns instead of 5 */
+.pharm-matrix {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+/* Knowledge-on tags inside pharm rows */
+.pharm-tags { display: flex; gap: 3px; flex-shrink: 0; }
+.pharm-tag {
+  font-size: 9px; padding: 1px 5px; border-radius: 8px;
+  background: var(--purple-100); color: var(--purple-500);
+  white-space: nowrap;
+}
+
 /* ── PSYCHIATRY MATRIX ──────────────────────────────────────────────────── */
 .psych-section-header { margin-bottom:2px; }
 .psych-header-actions { display:flex; gap:8px; align-items:center; }

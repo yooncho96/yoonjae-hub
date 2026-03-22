@@ -6,7 +6,7 @@
 export const PROXY =
   window.location.hostname === "localhost"
     ? "http://localhost:3000/api/notion"
-    : "https://yoonjae-hub-yooncho96-9584s-projects.vercel.app/api/notion";
+    : "https://yoonjae-hub.vercel.app/api/notion"; // ← update after Vercel deploy
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ALL NOTION DATABASE / PAGE IDs FROM YOUR WORKSPACE
@@ -20,6 +20,8 @@ export const IDS = {
   uworldTracker:     "31ef6c38-f95e-80e8-9c55-ed4e894ade06",
   petCareLog:        "31ef6c38-f95e-80cc-989d-e7351902c917",
   psychiatryDb:      "9597dfe9-a7a6-42e1-8989-c0ff7ed16250",
+  psychopharmDb:     "294f6c38-f95e-806d-af0b-c5aa5d2d0a6e",
+  psychopharmPage:   "294f6c38-f95e-80dc-a883-eaf9989ce3d6",
   flashcards:        "27cf6c38-f95e-80f5-b8d4-f8d2652f0882",
   flashcardTemplate: "27df6c38-f95e-81cb-bb86-d381d22b642e",
   // Pages
