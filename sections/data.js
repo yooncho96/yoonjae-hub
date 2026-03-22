@@ -6,7 +6,7 @@
 export const PROXY =
   window.location.hostname === "localhost"
     ? "http://localhost:3000/api/notion"
-    : "https://yoonjae-hub.vercel.app"; // ← update after Vercel deploy
+    : "https://yoonjae-hub-yooncho96-9584s-projects.vercel.app"; // ← update after Vercel deploy
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ALL NOTION DATABASE / PAGE IDs FROM YOUR WORKSPACE
