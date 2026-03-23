@@ -216,7 +216,7 @@ document.getElementById("wellbeing-save-btn")?.addEventListener("click", async (
     "title of day": { title: [{ text: { content: today } }] },
     "date":         { date: { start: today } },
     "morning meds": { checkbox: mornMeds },
-    "night meds":   { checkbox: nightMeds },
+    "yesterday night meds": { checkbox: nightMeds },
     "meals":        { multi_select: meals.map(n => ({ name: n })) },
     "snacks":       { multi_select: snacks.map(n => ({ name: n })) },
   };
