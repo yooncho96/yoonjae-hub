@@ -37,9 +37,8 @@ document.querySelectorAll(".view-tab").forEach(tab => {
     document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     const view = tab.dataset.view;
-    document.querySelectorAll(".view-panel").forEach(p => p.style.display = "none");
-    const panel = document.getElementById(`view-${view}`);
-    if (panel) panel.style.display = "";
+    document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(`view-${view}`)?.classList.add("active");
     try { localStorage.setItem("hub:activeView", view); } catch {}
   });
 });
@@ -47,9 +46,7 @@ document.querySelectorAll(".view-tab").forEach(tab => {
 // Restore last view
 try {
   const lastView = localStorage.getItem("hub:activeView");
-  if (lastView && lastView !== "home") {
-    document.querySelector(`.view-tab[data-view="${lastView}"]`)?.click();
-  }
+  if (lastView) document.querySelector(`.view-tab[data-view="${lastView}"]`)?.click();
 } catch {}
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -181,10 +178,11 @@ document.querySelectorAll(".wb-chips").forEach(group => {
 });
 
 // Checkbox meds chips (toggle with ☐/☑ label)
+const MEDS_LABELS = { morning_meds: "am", night_meds: "pm" };
 document.querySelectorAll(".wb-check").forEach(chip => {
   chip.addEventListener("click", () => {
     const checked = chip.classList.toggle("selected");
-    chip.textContent = (checked ? "☑" : "☐") + " " + chip.dataset.field.replace("_meds", "").replace("_", " ");
+    chip.textContent = (checked ? "☑" : "☐") + " " + (MEDS_LABELS[chip.dataset.field] || chip.dataset.field);
   });
 });
 
@@ -246,28 +244,27 @@ document.getElementById("wellbeing-save-btn")?.addEventListener("click", async (
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COLLAPSIBLE CARDS
+// COLLAPSIBLE CARDS — event delegation so it works on dynamically rendered cards
 // ─────────────────────────────────────────────────────────────────────────────
-function initCollapsible() {
-  document.querySelectorAll(".card").forEach(card => {
+document.addEventListener("click", e => {
+  // Only trigger on the label text itself, not on badges/buttons inside it
+  const label = e.target.closest(".card-label");
+  if (!label) return;
+  // Don't collapse if the click was on a child button/link inside the label
+  if (e.target !== label && (e.target.tagName === "A" || e.target.tagName === "BUTTON")) return;
+  const card = label.closest(".card");
+  if (!card) return;
+  card.classList.toggle("collapsed");
+  const key = `hub:collapsed:${card.id || label.textContent.trim().slice(0, 30)}`;
+  try { localStorage.setItem(key, card.classList.contains("collapsed") ? "1" : "0"); } catch {}
+});
+
+// Restore collapsed state for static cards (wellbeing is the only static one)
+try {
+  document.querySelectorAll(".card[id]").forEach(card => {
     const label = card.querySelector(".card-label");
     if (!label) return;
-    const key = `hub:collapsed:${card.id || label.textContent.trim()}`;
-
-    // Restore collapsed state
-    try {
-      if (localStorage.getItem(key) === "1") card.classList.add("collapsed");
-    } catch {}
-
-    label.style.cursor = "pointer";
-    label.title = "Click to collapse/expand";
-    label.addEventListener("click", () => {
-      card.classList.toggle("collapsed");
-      try {
-        localStorage.setItem(key, card.classList.contains("collapsed") ? "1" : "0");
-      } catch {}
-    });
+    const key = `hub:collapsed:${card.id}`;
+    if (localStorage.getItem(key) === "1") card.classList.add("collapsed");
   });
-}
-
-initCollapsible();
+} catch {}

@@ -45,7 +45,7 @@
 </div>
 
 <!-- ── HOME VIEW ──────────────────────────────────────────────────────── -->
-<div class="view-panel" id="view-home">
+<div class="view-panel active" id="view-home">
   <div class="cc-main">
 
     <!-- LEFT column: schedule + tasks/pets sub-row -->
@@ -79,9 +79,9 @@
 
       <!-- Wellbeing check-in -->
       <div class="card" id="card-wellbeing">
-        <div class="section-title-row">
-          <div class="card-label">check in</div>
-          <button class="see-all wb-save-btn" id="wellbeing-save-btn">save →</button>
+        <div class="section-title-row" style="margin-bottom:10px;">
+          <div class="card-label" style="margin-bottom:0;">check in</div>
+          <button class="wb-save-btn" id="wellbeing-save-btn">save →</button>
         </div>
 
         <div class="wb-row">
@@ -104,39 +104,43 @@
           </div>
         </div>
 
-        <div class="wb-row">
-          <span class="wb-label">meals</span>
-          <div class="wb-chips" data-field="meals" data-type="multi">
-            <div class="mood-chip" data-val="breakfast">breakfast</div>
-            <div class="mood-chip" data-val="lunch">lunch</div>
-            <div class="mood-chip" data-val="dinner">dinner</div>
+        <!-- meals + snacks side by side -->
+        <div class="wb-row wb-2col">
+          <div class="wb-col">
+            <span class="wb-label">meals</span>
+            <div class="wb-chips" data-field="meals" data-type="multi">
+              <div class="mood-chip" data-val="breakfast">breakfast</div>
+              <div class="mood-chip" data-val="lunch">lunch</div>
+              <div class="mood-chip" data-val="dinner">dinner</div>
+            </div>
+          </div>
+          <div class="wb-col">
+            <span class="wb-label">snacks</span>
+            <div class="wb-chips" data-field="snacks" data-type="multi">
+              <div class="mood-chip" data-val="healthy">healthy</div>
+              <div class="mood-chip" data-val="okay">okay</div>
+              <div class="mood-chip" data-val="junky">junky</div>
+              <div class="mood-chip" data-val="skipped">none</div>
+            </div>
           </div>
         </div>
 
-        <div class="wb-row">
-          <span class="wb-label">snacks</span>
-          <div class="wb-chips" data-field="snacks" data-type="multi">
-            <div class="mood-chip" data-val="healthy">healthy</div>
-            <div class="mood-chip" data-val="okay">okay</div>
-            <div class="mood-chip" data-val="junky">junky</div>
-            <div class="mood-chip" data-val="skipped">skipped</div>
+        <!-- meds + SI side by side -->
+        <div class="wb-row wb-2col" style="border-bottom:none;">
+          <div class="wb-col">
+            <span class="wb-label">meds</span>
+            <div class="wb-chips" data-type="none">
+              <div class="mood-chip wb-check" data-field="morning_meds">☐ am</div>
+              <div class="mood-chip wb-check" data-field="night_meds">☐ pm</div>
+            </div>
           </div>
-        </div>
-
-        <div class="wb-row">
-          <span class="wb-label">meds</span>
-          <div class="wb-chips" data-type="none">
-            <div class="mood-chip wb-check" data-field="morning_meds">☐ morning</div>
-            <div class="mood-chip wb-check" data-field="night_meds">☐ night</div>
-          </div>
-        </div>
-
-        <div class="wb-row">
-          <span class="wb-label">SI</span>
-          <div class="wb-chips" data-field="SI" data-type="select">
-            <div class="mood-chip" data-val="none">none</div>
-            <div class="mood-chip" data-val="passive">passive</div>
-            <div class="mood-chip" data-val="active">active</div>
+          <div class="wb-col">
+            <span class="wb-label">SI</span>
+            <div class="wb-chips" data-field="SI" data-type="select">
+              <div class="mood-chip" data-val="none">none</div>
+              <div class="mood-chip" data-val="passive">passive</div>
+              <div class="mood-chip" data-val="active">active</div>
+            </div>
           </div>
         </div>
 
@@ -148,7 +152,7 @@
 </div>
 
 <!-- ── KNOWLEDGE VIEW ──────────────────────────────────────────────────── -->
-<div class="view-panel" id="view-knowledge" style="display:none;">
+<div class="view-panel" id="view-knowledge">
   <div class="cc-knowledge">
     <div class="card" id="card-psychiatry">
       <div class="skeleton-block" style="height:350px;"></div>

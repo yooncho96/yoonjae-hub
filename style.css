@@ -100,12 +100,16 @@ a:hover { opacity: 0.72; }
 .view-tab:hover { background: var(--sand-100); color: var(--sand-600); }
 .view-tab.active { background: var(--sand-800); color: var(--sand-50); border-color: var(--sand-800); }
 
+/* ── VIEW PANELS ────────────────────────────────────────────────────────── */
+.view-panel         { display: none; }
+.view-panel.active  { display: block; }
+
 /* ── MAIN GRID ──────────────────────────────────────────────────────────── */
 .cc-main { display:grid; grid-template-columns:1fr 320px; gap:18px; padding:0 32px; align-items:start; }
 .cc-col-left, .cc-col-right { display:flex; flex-direction:column; gap:14px; }
 
 /* Tasks + Pets sub-row inside left column */
-.col-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.col-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
 
 /* Knowledge view — full width card */
 .cc-knowledge { padding: 0 32px; }
@@ -113,8 +117,10 @@ a:hover { opacity: 0.72; }
 /* ── CARDS ──────────────────────────────────────────────────────────────── */
 .card { background:#fff; border-radius:14px; border:0.5px solid var(--sand-200); padding:18px 20px; }
 
-/* Collapsible cards */
-.card.collapsed > *:not(.section-title-row):not(.card-label) { display: none !important; }
+/* Collapsible cards — hide everything except the title row */
+.card.collapsed > * { display: none !important; }
+.card.collapsed > .section-title-row { display: flex !important; }
+.card.collapsed > .card-label { display: block !important; }
 .card.collapsed { padding-bottom: 14px; }
 .card-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.09em; color:var(--sand-400); margin-bottom:13px; }
 .section-title-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:13px; }
@@ -289,16 +295,23 @@ a:hover { opacity: 0.72; }
 .status-blocked      { background:var(--red-100);    color:var(--red-500); }
 
 /* Wellbeing check-in */
-.wb-row { display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:0.5px solid var(--sand-100); }
-.wb-row:last-of-type { border-bottom: none; }
-.wb-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.07em; color:var(--sand-400); width:52px; flex-shrink:0; padding-top:6px; }
-.wb-chips { display:flex; gap:5px; flex-wrap:wrap; flex:1; }
-.wb-save-btn { font-size:11px; font-weight:500; font-family:inherit; background:none; border:none; cursor:pointer; color:var(--terra-600); padding:0; }
-.wb-save-btn:hover { opacity:0.7; }
-.mood-chip { font-size:11px; padding:4px 10px; border-radius:20px; border:0.5px solid var(--sand-200); background:var(--sand-50); color:var(--sand-600); cursor:pointer; transition:background 0.15s; user-select:none; font-family:inherit; }
+.wb-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--sand-100); }
+.wb-2col { align-items:flex-start; gap:14px; padding:7px 0; }
+.wb-col { display:flex; flex-direction:column; gap:5px; flex:1; }
+.wb-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.07em; color:var(--sand-400); width:40px; flex-shrink:0; }
+.wb-2col .wb-label { width:auto; }
+.wb-chips { display:flex; gap:4px; flex-wrap:wrap; flex:1; }
+.wb-2col .wb-chips { flex:none; }
+.wb-save-btn {
+  font-size:11px; font-weight:500; font-family:inherit; background:var(--terra-100);
+  border:0.5px solid var(--terra-400); border-radius:16px; cursor:pointer;
+  color:var(--terra-600); padding:4px 12px; transition:background 0.15s;
+}
+.wb-save-btn:hover { background:#edd6cb; }
+.mood-chip { font-size:11px; padding:3px 9px; border-radius:16px; border:0.5px solid var(--sand-200); background:var(--sand-50); color:var(--sand-600); cursor:pointer; transition:background 0.15s; user-select:none; font-family:inherit; white-space:nowrap; }
 .mood-chip:hover { background:var(--sand-100); border-color:var(--sand-300); }
 .mood-chip.selected { background:var(--moss-100); border-color:var(--moss-500); color:var(--moss-700); }
-.wellbeing-note { font-size:11px; color:var(--sand-400); margin-top:8px; font-style:italic; font-family:'Lora',serif; line-height:1.5; min-height:16px; }
+.wellbeing-note { font-size:11px; color:var(--sand-400); margin-top:6px; font-style:italic; font-family:'Lora',serif; line-height:1.5; min-height:14px; }
 
 /* Pets — new full log design */
 .pet-section { margin-bottom: 4px; }
@@ -308,7 +321,8 @@ a:hover { opacity: 0.72; }
 .pet-header-name { font-size:13px; font-weight:500; color:var(--sand-800); }
 .pet-last-log { font-size:11px; color:var(--sand-400); margin-top:1px; }
 
-.pet-form { margin-top:12px; padding:14px; background:var(--sand-50); border-radius:10px; border:0.5px solid var(--sand-200); }
+.pet-form { display:none; margin-top:12px; padding:14px; background:var(--sand-50); border-radius:10px; border:0.5px solid var(--sand-200); }
+.pet-form.open { display:block; }
 .pet-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
 .pet-form-footer { display:flex; align-items:center; gap:8px; margin-top:12px; justify-content:flex-end; }
 .pet-save-msg { font-size:11px; flex:1; }

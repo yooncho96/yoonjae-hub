@@ -61,7 +61,7 @@ export function renderPets(data, container) {
         <button class="fc-btn fc-primary" id="mimic-toggle-btn">log today</button>
       </div>
 
-      <div class="pet-form" id="mimic-form" style="display:none;">
+      <div class="pet-form" id="mimic-form">
         <div class="pet-form-grid">
 
           <div class="form-group" style="grid-column:1/3;">
@@ -131,7 +131,7 @@ export function renderPets(data, container) {
         <button class="fc-btn fc-primary" id="pumpkin-toggle-btn">log today</button>
       </div>
 
-      <div class="pet-form" id="pumpkin-form" style="display:none;">
+      <div class="pet-form" id="pumpkin-form">
         <div class="pet-form-grid">
 
           <div class="form-group">
@@ -235,17 +235,11 @@ function wirePetForm(container, pet, saveFn) {
   const saveBtn   = document.getElementById(`${pet}-save-btn`);
   const saveMsg   = document.getElementById(`${pet}-save-msg`);
 
-  toggleBtn.addEventListener("click", () => {
-    const open = form.style.display !== "none";
-    form.style.display = open ? "none" : "";
-    toggleBtn.textContent = open ? "log today" : "cancel";
-  });
+  function openForm()  { form.classList.add("open");    toggleBtn.textContent = "cancel"; }
+  function closeForm() { form.classList.remove("open"); toggleBtn.textContent = "log today"; saveMsg.textContent = ""; }
 
-  cancelBtn.addEventListener("click", () => {
-    form.style.display = "none";
-    toggleBtn.textContent = "log today";
-    saveMsg.textContent = "";
-  });
+  toggleBtn.addEventListener("click", () => form.classList.contains("open") ? closeForm() : openForm());
+  cancelBtn.addEventListener("click", closeForm);
 
   saveBtn.addEventListener("click", async () => {
     saveBtn.disabled = true;
