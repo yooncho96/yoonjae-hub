@@ -106,7 +106,7 @@ export async function loadStep3() {
   });
   const rows = data.results || [];
 
-  // Only rows with the "Done" checkbox checked count as completed sessions
+  // Only rows with the "Done" checkbox checked count toward totals
   const done = rows.filter(r => prop(r, "Done") === true);
 
   const totalQs = done.reduce((s, r) => s + (prop(r, "Qs") || 0), 0);
@@ -116,7 +116,8 @@ export async function loadStep3() {
     ? Math.round(scoredRows.reduce((s, r) => s + prop(r, "Score"), 0) / scoredRows.length)
     : null;
 
-  const todayRow = done.find(r => prop(r, "Date") === t) || null;
+  // todayRow searches ALL rows so you can still log score even if Done not yet checked
+  const todayRow = rows.find(r => prop(r, "Date") === t) || null;
 
   return {
     totalQs,
