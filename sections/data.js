@@ -18,7 +18,9 @@ export const IDS = {
   waveTracker:       "31ef6c38-f95e-8098-ab39-ff0d9a5327be",
   researchPipeline:  "31ef6c38-f95e-8060-b59c-ed57d63ab7a3",
   uworldTracker:     "31ef6c38-f95e-80e8-9c55-ed4e894ade06",
-  petCareLog:        "31ef6c38-f95e-80cc-989d-e7351902c917",
+  mimic:             "32cf6c38-f95e-80ea-bd07-f67a4bcc18b5",
+  pumpkin:           "32cf6c38-f95e-806f-be88-c43cda1275e8",
+  wellbeingDb:       "32cf6c38-f95e-80a2-8640-f85b84581838",
   psychiatryDb:      "9597dfe9-a7a6-42e1-8989-c0ff7ed16250",
   psychopharmDb:     "294f6c38-f95e-806d-af0b-c5aa5d2d0a6e",
   psychopharmPage:   "294f6c38-f95e-80dc-a883-eaf9989ce3d6",
@@ -27,7 +29,6 @@ export const IDS = {
   // Pages
   psychiatryPage:    "294f6c38-f95e-804a-b2cc-d86f0276298f",
   commandCenter:     "31ef6c38-f95e-8088-b194-c29b9ceaad09",
-  prite:             "32af6c38-f95e-80c1-a848-d6f38c2673b8",
   step3Review:       "25cf6c38-f95e-8068-b0c5-f9949d987df6",
 };
 

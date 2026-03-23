@@ -17,11 +17,9 @@
   <div class="ql-links">
     <a href="https://utexas.zoom.us/j/87612240207?pwd=68kJDa76Kr2gieZqTblIba9BlAzsbg.1" target="_blank" class="ql-link">WAVE Zoom</a>
     <a href="https://us06web.zoom.us/j/86213955204?pwd=WbdP1U676cKkAFS2z3bJmNR4cObymD.1" target="_blank" class="ql-link">DBT Zoom</a>
-    <a href="https://teams.microsoft.com/meet/25201649032581?p=GhxmpcwFBoRnkogJCm" target="_blank" class="ql-link">6-mo Eval</a>
     <a href="https://www.notion.so/31ef6c38f95e8088b194c29b9ceaad09" target="_blank" class="ql-link ql-notion">Notion ↗</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <!-- Add page button — triggers the form modal -->
     <button class="add-page-trigger" id="add-page-btn">+ add to notion</button>
     <div class="ql-date" id="ql-date"></div>
   </div>
@@ -40,53 +38,121 @@
   </div>
 </div>
 
-<!-- ── MAIN GRID ──────────────────────────────────────────────────────── -->
-<div class="cc-main">
+<!-- ── VIEW TABS ──────────────────────────────────────────────────────── -->
+<div class="view-nav">
+  <button class="view-tab active" data-view="home">home</button>
+  <button class="view-tab" data-view="knowledge">🧠 knowledge</button>
+</div>
 
-  <!-- LEFT column: schedule + psychiatry matrix -->
-  <div class="cc-col-left">
+<!-- ── HOME VIEW ──────────────────────────────────────────────────────── -->
+<div class="view-panel" id="view-home">
+  <div class="cc-main">
 
-    <div class="card" id="card-schedule">
-      <div class="skeleton-block" style="height:220px;"></div>
+    <!-- LEFT column: schedule + tasks/pets sub-row -->
+    <div class="cc-col-left">
+
+      <div class="card" id="card-schedule">
+        <div class="skeleton-block" style="height:220px;"></div>
+      </div>
+
+      <div class="col-left-bottom">
+        <div class="card" id="card-tasks">
+          <div class="skeleton-block" style="height:160px;"></div>
+        </div>
+        <div class="card" id="card-pets">
+          <div class="skeleton-block" style="height:160px;"></div>
+        </div>
+      </div>
+
     </div>
 
+    <!-- RIGHT column: step3, research, wellbeing -->
+    <div class="cc-col-right">
+
+      <div class="card" id="card-step3">
+        <div class="skeleton-block" style="height:130px;"></div>
+      </div>
+
+      <div class="card" id="card-research">
+        <div class="skeleton-block" style="height:140px;"></div>
+      </div>
+
+      <!-- Wellbeing check-in -->
+      <div class="card" id="card-wellbeing">
+        <div class="section-title-row">
+          <div class="card-label">check in</div>
+          <button class="see-all wb-save-btn" id="wellbeing-save-btn">save →</button>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">mood</span>
+          <div class="wb-chips" data-field="mood" data-type="select">
+            <div class="mood-chip" data-val="grounded">grounded</div>
+            <div class="mood-chip" data-val="okay">okay</div>
+            <div class="mood-chip" data-val="tired">tired</div>
+            <div class="mood-chip" data-val="scattered">scattered</div>
+          </div>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">sleep</span>
+          <div class="wb-chips" data-field="sleep" data-type="select">
+            <div class="mood-chip" data-val="great">great</div>
+            <div class="mood-chip" data-val="okay">okay</div>
+            <div class="mood-chip" data-val="poor">poor</div>
+            <div class="mood-chip" data-val="rough">rough</div>
+          </div>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">meals</span>
+          <div class="wb-chips" data-field="meals" data-type="multi">
+            <div class="mood-chip" data-val="breakfast">breakfast</div>
+            <div class="mood-chip" data-val="lunch">lunch</div>
+            <div class="mood-chip" data-val="dinner">dinner</div>
+          </div>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">snacks</span>
+          <div class="wb-chips" data-field="snacks" data-type="multi">
+            <div class="mood-chip" data-val="healthy">healthy</div>
+            <div class="mood-chip" data-val="okay">okay</div>
+            <div class="mood-chip" data-val="junky">junky</div>
+            <div class="mood-chip" data-val="skipped">skipped</div>
+          </div>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">meds</span>
+          <div class="wb-chips" data-type="none">
+            <div class="mood-chip wb-check" data-field="morning_meds">☐ morning</div>
+            <div class="mood-chip wb-check" data-field="night_meds">☐ night</div>
+          </div>
+        </div>
+
+        <div class="wb-row">
+          <span class="wb-label">SI</span>
+          <div class="wb-chips" data-field="SI" data-type="select">
+            <div class="mood-chip" data-val="none">none</div>
+            <div class="mood-chip" data-val="passive">passive</div>
+            <div class="mood-chip" data-val="active">active</div>
+          </div>
+        </div>
+
+        <div class="wellbeing-note" id="wb-status"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── KNOWLEDGE VIEW ──────────────────────────────────────────────────── -->
+<div class="view-panel" id="view-knowledge" style="display:none;">
+  <div class="cc-knowledge">
     <div class="card" id="card-psychiatry">
       <div class="skeleton-block" style="height:350px;"></div>
     </div>
-
-  </div>
-
-  <!-- RIGHT column: sidebar panels -->
-  <div class="cc-col-right">
-
-    <div class="card" id="card-step3">
-      <div class="skeleton-block" style="height:130px;"></div>
-    </div>
-
-    <div class="card" id="card-tasks">
-      <div class="skeleton-block" style="height:160px;"></div>
-    </div>
-
-    <div class="card" id="card-research">
-      <div class="skeleton-block" style="height:140px;"></div>
-    </div>
-
-    <!-- Wellbeing — static, no API needed -->
-    <div class="card">
-      <div class="card-label">how are you?</div>
-      <div class="wellbeing-row">
-        <div class="mood-chip" onclick="selectMood(this,'grounded')">grounded</div>
-        <div class="mood-chip" onclick="selectMood(this,'tired')">tired</div>
-        <div class="mood-chip" onclick="selectMood(this,'scattered')">scattered</div>
-        <div class="mood-chip" onclick="selectMood(this,'okay')">okay</div>
-      </div>
-      <div class="wellbeing-note" id="mood-note">Deborah on Zoom this week.</div>
-    </div>
-
-    <div class="card" id="card-pets">
-      <div class="skeleton-block" style="height:80px;"></div>
-    </div>
-
   </div>
 </div>
 

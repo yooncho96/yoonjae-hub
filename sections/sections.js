@@ -2,6 +2,10 @@ import { api, IDS, prop, pageTitle, nlink, fmtDate, fmtRelative, todayStr, daysU
 import { openPage } from "./viewer.js";
 
 const STEP3_DATE = "2026-05-09";
+// Total UWorld questions — adjust as needed
+const STEP3_GOAL = (() => {
+  try { return parseInt(localStorage.getItem("hub:step3goal") || "3200", 10) || 3200; } catch { return 3200; }
+})();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCHEDULE
@@ -49,7 +53,6 @@ export function renderSchedule(events, container) {
     </div>
   `;
 
-  // Each event row opens the page in the viewer when clicked
   container.querySelectorAll("[data-page-id]").forEach(el =>
     el.addEventListener("click", () => openPage(el.dataset.pageId, el.dataset.title))
   );
@@ -103,19 +106,16 @@ export async function loadStep3() {
   });
   const rows = data.results || [];
 
-  // Rows with a Date are real sessions; rows without are planned/template rows
-  const done = rows.filter(r => prop(r, "Date") !== null);
+  // Only rows with the "Done" checkbox checked count as completed sessions
+  const done = rows.filter(r => prop(r, "Done") === true);
 
-  // Total Qs done across all sessions
   const totalQs = done.reduce((s, r) => s + (prop(r, "Qs") || 0), 0);
 
-  // Average score across sessions that have a Score value
   const scoredRows = done.filter(r => prop(r, "Score") !== null);
   const avgScore = scoredRows.length > 0
     ? Math.round(scoredRows.reduce((s, r) => s + prop(r, "Score"), 0) / scoredRows.length)
     : null;
 
-  // Today's row — used to show Subject/Qs/Notes and as the target for Score logging
   const todayRow = done.find(r => prop(r, "Date") === t) || null;
 
   return {
@@ -123,6 +123,7 @@ export async function loadStep3() {
     avgScore,
     daysLeft: daysUntil(STEP3_DATE),
     doneSessions: done.length,
+    goal: STEP3_GOAL,
     todayRow: todayRow ? {
       id: todayRow.id,
       subject: prop(todayRow, "Subject") || "",
@@ -134,7 +135,7 @@ export async function loadStep3() {
 }
 
 export function renderStep3(d, container) {
-  const progress = Math.min(100, Math.round((d.totalQs / 3200) * 100)); // ~3200 Qs total in UWorld
+  const progress = Math.min(100, Math.round((d.totalQs / d.goal) * 100));
 
   container.innerHTML = `
     <div class="section-title-row">
@@ -158,7 +159,9 @@ export function renderStep3(d, container) {
     <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${progress}%"></div></div>
     <div class="mini-prog-label">
       <span>${d.totalQs.toLocaleString()} Qs · ${d.doneSessions} sessions</span>
-      <span>~3,200 total</span>
+      <span>
+        <span class="s3-goal-val" title="Click to edit goal">${d.goal.toLocaleString()} total</span>
+      </span>
     </div>
 
     <!-- Today's session info + log score button -->
@@ -185,6 +188,14 @@ export function renderStep3(d, container) {
       <button class="fc-btn" id="step3-score-cancel">cancel</button>
       <span class="step3-save-msg" id="step3-save-msg"></span>
     </div>
+
+    <!-- Goal editor — hidden until clicked -->
+    <div class="step3-score-input" id="step3-goal-input" style="display:none;">
+      <input type="number" min="100" placeholder="Total Qs goal" id="step3-goal-val"
+             class="form-input" style="width:120px;" value="${d.goal}"/>
+      <button class="fc-btn fc-primary" id="step3-goal-save">set goal</button>
+      <button class="fc-btn" id="step3-goal-cancel">cancel</button>
+    </div>
   `;
 
   // Wire up log score flow
@@ -196,11 +207,7 @@ export function renderStep3(d, container) {
   const saveMsg    = document.getElementById("step3-save-msg");
 
   logBtn.addEventListener("click", () => {
-    if (!d.todayRow) {
-      // No row for today — open tracker in Notion to create one
-      window.open(nlink(IDS.uworldTracker), "_blank");
-      return;
-    }
+    if (!d.todayRow) { window.open(nlink(IDS.uworldTracker), "_blank"); return; }
     inputRow.style.display = "flex";
     logBtn.style.display = "none";
     scoreInput.focus();
@@ -220,23 +227,15 @@ export function renderStep3(d, container) {
       saveMsg.style.color = "var(--red-500)";
       return;
     }
-
     saveBtn.disabled = true;
     saveBtn.textContent = "saving…";
     saveMsg.textContent = "";
-
     try {
-      await api("update", d.todayRow.id, {
-        properties: {
-          Score: { number: val },
-        },
-      });
-      // Update button label in place
+      await api("update", d.todayRow.id, { properties: { Score: { number: val } } });
       logBtn.textContent = `score: ${val}% ✓`;
       d.todayRow.score = val;
       inputRow.style.display = "none";
       logBtn.style.display = "";
-      saveMsg.textContent = "";
     } catch (err) {
       saveMsg.textContent = `Failed: ${err.message}`;
       saveMsg.style.color = "var(--red-500)";
@@ -246,10 +245,44 @@ export function renderStep3(d, container) {
     }
   });
 
-  // Allow Enter key to submit
   scoreInput.addEventListener("keydown", e => {
     if (e.key === "Enter") saveBtn.click();
     if (e.key === "Escape") cancelBtn.click();
+  });
+
+  // Wire up editable goal
+  const goalValEl   = container.querySelector(".s3-goal-val");
+  const goalInput   = document.getElementById("step3-goal-input");
+  const goalValInput = document.getElementById("step3-goal-val");
+  const goalSaveBtn  = document.getElementById("step3-goal-save");
+  const goalCancelBtn = document.getElementById("step3-goal-cancel");
+
+  goalValEl.style.cursor = "pointer";
+  goalValEl.addEventListener("click", () => {
+    goalInput.style.display = "flex";
+    goalValEl.parentElement.style.display = "none";
+    goalValInput.focus();
+  });
+  goalCancelBtn.addEventListener("click", () => {
+    goalInput.style.display = "none";
+    goalValEl.parentElement.style.display = "";
+  });
+  goalSaveBtn.addEventListener("click", () => {
+    const g = parseInt(goalValInput.value, 10);
+    if (g > 0) {
+      try { localStorage.setItem("hub:step3goal", String(g)); } catch {}
+      goalValEl.textContent = `${g.toLocaleString()} total`;
+      // Update bar
+      const newProgress = Math.min(100, Math.round((d.totalQs / g) * 100));
+      const fill = container.querySelector(".mini-bar-fill");
+      if (fill) fill.style.width = newProgress + "%";
+    }
+    goalInput.style.display = "none";
+    goalValEl.parentElement.style.display = "";
+  });
+  goalValInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") goalSaveBtn.click();
+    if (e.key === "Escape") goalCancelBtn.click();
   });
 }
 
@@ -277,7 +310,18 @@ export function renderTasks(tasks, container) {
   const overdue  = tasks.filter(x => x.due && x.due < t);
   const dueToday = tasks.filter(x => x.due === t);
   const rest     = tasks.filter(x => !x.due || x.due > t);
-  const shown    = [...overdue, ...dueToday, ...rest].slice(0, 7);
+
+  function taskGroup(label, items) {
+    if (!items.length) return "";
+    return `
+      <div class="task-group-label">${label} <span class="task-group-count">${items.length}</span></div>
+      ${items.map(task => taskRow(task, t)).join("")}`;
+  }
+
+  const shown = [...overdue, ...dueToday, ...rest].slice(0, 10);
+  const overdueShown  = shown.filter(x => x.due && x.due < t);
+  const todayShown    = shown.filter(x => x.due === t);
+  const restShown     = shown.filter(x => !x.due || x.due > t);
 
   container.innerHTML = `
     <div class="section-title-row">
@@ -286,19 +330,49 @@ export function renderTasks(tasks, container) {
     </div>
     ${shown.length === 0
       ? `<div class="empty-state">All clear.</div>`
-      : shown.map(task => `
-          <div class="mini-row task-row event-clickable" data-page-id="${task.id}" data-title="${task.title}">
-            <span class="mini-label ${task.due && task.due < t ? "overdue" : task.due === t ? "due-today" : ""}">${task.title}</span>
-            <div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">
-              ${task.priority ? `<span class="priority-dot priority-${(task.priority||"").toLowerCase()}"></span>` : ""}
-              <span class="mini-val">${task.due ? fmtDate(task.due) : (task.status || "")}</span>
-            </div>
-          </div>`).join("")}
+      : `${taskGroup("overdue", overdueShown)}${taskGroup("today", todayShown)}${taskGroup("upcoming", restShown)}`}
   `;
 
+  // Quick-complete buttons
+  container.querySelectorAll(".task-done-btn").forEach(btn => {
+    btn.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      const row = btn.closest("[data-page-id]");
+      const id = row?.dataset.pageId;
+      if (!id) return;
+      btn.textContent = "…";
+      btn.disabled = true;
+      try {
+        await api("update", id, { properties: { Status: { status: { name: "Done" } } } });
+        row.style.opacity = "0.4";
+        row.style.pointerEvents = "none";
+        btn.textContent = "✓";
+      } catch {
+        btn.textContent = "✕";
+        btn.disabled = false;
+      }
+    });
+  });
+
+  // Click row to open page
   container.querySelectorAll("[data-page-id]").forEach(el =>
     el.addEventListener("click", () => openPage(el.dataset.pageId, el.dataset.title))
   );
+}
+
+function taskRow(task, today) {
+  const urgency = task.due && task.due < today ? "overdue"
+                : task.due === today           ? "due-today"
+                : "";
+  return `
+    <div class="mini-row task-row event-clickable" data-page-id="${task.id}" data-title="${task.title}">
+      <button class="task-done-btn" title="Mark done">○</button>
+      <span class="mini-label ${urgency}">${task.title}</span>
+      <div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">
+        ${task.priority ? `<span class="priority-dot priority-${(task.priority||"").toLowerCase()}"></span>` : ""}
+        <span class="mini-val">${task.due ? fmtDate(task.due) : (task.status || "")}</span>
+      </div>
+    </div>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -307,77 +381,62 @@ export function renderTasks(tasks, container) {
 export async function loadResearch() {
   const [res, wave] = await Promise.all([
     api("query", IDS.researchPipeline, { page_size: 20 }),
-    api("query", IDS.waveTracker,      { page_size: 30 }),
+    api("query", IDS.waveTracker,      { page_size: 100 }),
   ]);
   const manuscripts = (res.results || []).map(r => ({
-    id: r.id, title: pageTitle(r), status: prop(r,"Status"),
+    id: r.id, title: pageTitle(r), status: prop(r, "Status"),
   }));
-  const waveActive = (wave.results || []).filter(r => {
-    const s = (prop(r,"Status") || "").toLowerCase();
-    return s.includes("progress") || s.includes("active");
-  }).length;
-  return { manuscripts, waveActive, waveTotal: wave.results?.length || 0 };
+
+  // WAVE breakdown by status
+  const waveByStatus = {};
+  (wave.results || []).forEach(r => {
+    const s = prop(r, "Status") || "unknown";
+    waveByStatus[s] = (waveByStatus[s] || 0) + 1;
+  });
+
+  return { manuscripts, waveByStatus, waveTotal: wave.results?.length || 0 };
 }
 
-export function renderResearch({ manuscripts, waveActive, waveTotal }, container) {
+export function renderResearch({ manuscripts, waveByStatus, waveTotal }, container) {
   const statusSlug = s => (s||"").toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+
+  // Group manuscripts by pipeline stage
+  const byStatus = {};
+  manuscripts.forEach(m => {
+    const s = m.status || "Other";
+    if (!byStatus[s]) byStatus[s] = [];
+    byStatus[s].push(m);
+  });
+
+  const manuscriptHtml = Object.entries(byStatus).map(([status, items]) => `
+    <div class="research-group-label">${status}</div>
+    ${items.map(m => `
+      <div class="mini-row event-clickable" data-page-id="${m.id}" data-title="${m.title}">
+        <span class="mini-label">${m.title}</span>
+        <span class="status-badge status-${statusSlug(m.status)}">${m.status}</span>
+      </div>`).join("")}
+  `).join("") || `<div class="empty-state">No manuscripts.</div>`;
+
+  // WAVE summary pills
+  const waveEntries = Object.entries(waveByStatus).sort((a, b) => b[1] - a[1]);
+  const wavePills = waveEntries.map(([s, n]) =>
+    `<span class="wave-pill wave-${statusSlug(s)}">${s} <b>${n}</b></span>`
+  ).join("");
 
   container.innerHTML = `
     <div class="section-title-row">
       <div class="card-label">research</div>
       <a class="see-all" href="${nlink(IDS.researchPipeline)}" target="_blank">pipeline ↗</a>
     </div>
-    ${manuscripts.slice(0,5).map(m => `
-      <div class="mini-row event-clickable" data-page-id="${m.id}" data-title="${m.title}">
-        <span class="mini-label">${m.title}</span>
-        ${m.status ? `<span class="status-badge status-${statusSlug(m.status)}">${m.status}</span>` : ""}
-      </div>`).join("")}
+    ${manuscriptHtml}
     <div class="shift-divider" style="margin:10px 0;"></div>
-    <div class="mini-row">
-      <span class="mini-label">🌊 WAVE</span>
-      <a class="mini-val" href="${nlink(IDS.waveTracker)}" target="_blank">${waveActive} active · ${waveTotal} total ↗</a>
+    <div class="mini-row" style="flex-wrap:wrap;gap:6px;padding-bottom:4px;">
+      <a class="mini-label" href="${nlink(IDS.waveTracker)}" target="_blank" style="opacity:1;">🌊 WAVE · ${waveTotal} total</a>
     </div>
+    <div class="wave-pills">${wavePills}</div>
   `;
 
   container.querySelectorAll("[data-page-id]").forEach(el =>
     el.addEventListener("click", () => openPage(el.dataset.pageId, el.dataset.title))
   );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PETS
-// ─────────────────────────────────────────────────────────────────────────────
-export async function loadPets() {
-  const data = await api("query", IDS.petCareLog, {
-    sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
-    page_size: 10,
-  });
-  return (data.results || []).map(r => ({
-    id: r.id,
-    title: pageTitle(r),
-    date: prop(r, "Date"),
-    notes: prop(r, "Notes"),
-  }));
-}
-
-export function renderPets(logs, container) {
-  const mimic   = logs.find(l => l.title?.toLowerCase().includes("mimic"));
-  const pumpkin = logs.find(l => l.title?.toLowerCase().includes("pumpkin"));
-
-  container.innerHTML = `
-    <div class="section-title-row">
-      <div class="card-label">🐾 mimic & pumpkin</div>
-      <a class="see-all" href="${nlink(IDS.petCareLog)}" target="_blank">log ↗</a>
-    </div>
-    <div class="pet-row">
-      <span class="pet-name">Mimic</span>
-      <span class="pet-meta">${mimic?.date ? fmtRelative(mimic.date) : "no log"}</span>
-      <a class="fc-btn" href="${nlink(IDS.petCareLog)}" target="_blank">+ log ↗</a>
-    </div>
-    <div class="pet-row">
-      <span class="pet-name">Pumpkin</span>
-      <span class="pet-meta">${pumpkin?.date ? fmtRelative(pumpkin.date) : "no log"}</span>
-      <a class="fc-btn" href="${nlink(IDS.petCareLog)}" target="_blank">+ log ↗</a>
-    </div>
-  `;
 }

@@ -122,6 +122,19 @@ function renderBlock(block) {
     case "table_of_contents":
       return `<div class="nb-toc-placeholder">Contents</div>`;
 
+    case "table":
+      // Tables need children (rows) fetched asynchronously
+      return `<div class="nb-table-wrap" data-block-id="${block.id}" data-table-pending="${block.id}">
+        <span class="nb-loading">loading table…</span>
+      </div>`;
+
+    case "table_row": {
+      const cells = block.table_row?.cells || [];
+      const isHeader = block._isHeader;
+      const tag = isHeader ? "th" : "td";
+      return `<tr>${cells.map(cell => `<${tag} class="nb-td">${renderRichText(cell)}</${tag}>`).join("")}</tr>`;
+    }
+
     case "child_page":
       const cpTitle = block.child_page?.title || "Subpage";
       return `<div class="nb-child-page">
@@ -171,15 +184,24 @@ export async function renderBlocksInto(blocks, container) {
   container.innerHTML = html;
 
   // Second pass: find all pending children and fetch them
-  const pending = container.querySelectorAll("[data-children-pending], [data-columns-pending]");
+  const pending = container.querySelectorAll("[data-children-pending], [data-columns-pending], [data-table-pending]");
   const fetches = Array.from(pending).map(async el => {
-    const blockId = el.dataset.childrenPending || el.dataset.columnsPending;
+    const blockId = el.dataset.childrenPending || el.dataset.columnsPending || el.dataset.tablePending;
     try {
       const data = await api("block_children", blockId);
       const childBlocks = data.results || [];
       const isColumns = el.dataset.columnsPending != null;
+      const isTable = el.dataset.tablePending != null;
 
-      if (isColumns) {
+      if (isTable) {
+        // Table: first row is header if table.has_column_header
+        const hasHeader = true; // conservative — treat first row as header
+        const rows = childBlocks.map((rowBlock, i) => {
+          rowBlock._isHeader = hasHeader && i === 0;
+          return renderBlock(rowBlock);
+        }).join("");
+        el.outerHTML = `<div class="nb-table-wrap"><table class="nb-table"><tbody>${rows}</tbody></table></div>`;
+      } else if (isColumns) {
         // Column list: fetch each column's children and render side by side
         el.innerHTML = "";
         const colFetches = childBlocks.map(async colBlock => {
@@ -194,6 +216,7 @@ export async function renderBlocksInto(blocks, container) {
         // Toggle or callout children
         await renderBlocksInto(childBlocks, el);
       }
+
     } catch {
       el.innerHTML = `<span class="nb-err">failed to load</span>`;
     }
