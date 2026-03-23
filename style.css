@@ -321,6 +321,20 @@ a:hover { opacity: 0.72; }
 .pet-header-name { font-size:13px; font-weight:500; color:var(--sand-800); }
 .pet-last-log { font-size:11px; color:var(--sand-400); margin-top:1px; }
 
+.pet-entry-date { font-size:10px; color:var(--sand-400); font-weight:300; margin-left:6px; }
+.pet-summary-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; max-width:100%; }
+.pet-summary-pill {
+  font-size:10px; padding:2px 7px; border-radius:10px; white-space:nowrap;
+  background:var(--sand-100); color:var(--sand-600); border:0.5px solid var(--sand-200);
+}
+.pet-pill-neutral { background:var(--sand-100); color:var(--sand-600); }
+.pet-pill-med     { background:var(--sky-100);  color:var(--sky-500); }
+.pet-pill-prn     { background:var(--purple-100); color:var(--purple-500); }
+.pet-pill-good    { background:var(--moss-100); color:var(--moss-700); }
+.pet-pill-warn    { background:var(--amber-100); color:var(--amber-500); }
+.pet-pill-health  { background:var(--red-100);  color:var(--red-500); }
+.pet-pill-note    { background:var(--terra-100); color:var(--terra-600); max-width:180px; overflow:hidden; text-overflow:ellipsis; display:inline-block; vertical-align:middle; }
+
 .pet-form { display:none; margin-top:12px; padding:14px; background:var(--sand-50); border-radius:10px; border:0.5px solid var(--sand-200); }
 .pet-form.open { display:block; }
 .pet-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }

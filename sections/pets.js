@@ -20,19 +20,65 @@ export async function loadPets() {
 
   return {
     mimic: lastMimic ? {
-      id:       lastMimic.id,
-      date:     prop(lastMimic, "date"),
-      weight:   prop(lastMimic, "weight"),
-      behavior: prop(lastMimic, "behavior") || [],
+      id:           lastMimic.id,
+      date:         prop(lastMimic, "date"),
+      weight:       prop(lastMimic, "weight"),
+      behavior:     prop(lastMimic, "behavior")       || [],
+      schedMeds:    prop(lastMimic, "scheduled meds") || [],
+      prnMeds:      prop(lastMimic, "PRN meds")       || [],
+      training:     prop(lastMimic, "training")       || "",
+      health:       prop(lastMimic, "health comments")|| "",
     } : null,
     pumpkin: lastPumpkin ? {
-      id:      lastPumpkin.id,
-      date:    prop(lastPumpkin, "date"),
-      weight:  prop(lastPumpkin, "weight"),
-      feeding: prop(lastPumpkin, "feeding"),
-      shed:    prop(lastPumpkin, "shed"),
+      id:        lastPumpkin.id,
+      date:      prop(lastPumpkin, "date"),
+      weight:    prop(lastPumpkin, "weight"),
+      hotTemp:   prop(lastPumpkin, "hot zone temp"),
+      coolTemp:  prop(lastPumpkin, "cool zone temp"),
+      hotHum:    prop(lastPumpkin, "hot zone humidity"),
+      coolHum:   prop(lastPumpkin, "cool zone humidity"),
+      feeding:   prop(lastPumpkin, "feeding"),
+      shed:      prop(lastPumpkin, "shed"),
+      husbandry: prop(lastPumpkin, "husbandry change") || "",
+      health:    prop(lastPumpkin, "health comments")  || "",
     } : null,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAST-ENTRY SUMMARY HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function pill(text, style = "") {
+  return `<span class="pet-summary-pill${style ? " " + style : ""}">${text}</span>`;
+}
+
+function mimicSummary(m) {
+  const parts = [];
+  if (m.weight)             parts.push(pill(`${m.weight} lbs`, "pet-pill-neutral"));
+  m.behavior.forEach(b =>   parts.push(pill(b)));
+  m.schedMeds.forEach(s =>  parts.push(pill(s, "pet-pill-med")));
+  m.prnMeds.forEach(p =>    parts.push(pill(p, "pet-pill-prn")));
+  if (m.training)           parts.push(pill(`training: ${m.training}`, "pet-pill-note"));
+  if (m.health)             parts.push(pill(`⚕ ${m.health}`, "pet-pill-health"));
+  return parts.length
+    ? `<div class="pet-summary-pills">${parts.join("")}</div>`
+    : `<div class="pet-last-log">no details</div>`;
+}
+
+function pumpkinSummary(p) {
+  const parts = [];
+  if (p.weight !== null && p.weight !== undefined) parts.push(pill(`${p.weight}g`, "pet-pill-neutral"));
+  if (p.feeding)  parts.push(pill(`feeding: ${p.feeding}`, p.feeding === "success" ? "pet-pill-good" : "pet-pill-warn"));
+  if (p.shed)     parts.push(pill(`shed: ${p.shed}`, p.shed === "success" ? "pet-pill-good" : "pet-pill-warn"));
+  if (p.hotTemp !== null && p.hotTemp !== undefined)  parts.push(pill(`hot ${p.hotTemp}°F`, "pet-pill-neutral"));
+  if (p.coolTemp !== null && p.coolTemp !== undefined) parts.push(pill(`cool ${p.coolTemp}°F`, "pet-pill-neutral"));
+  if (p.hotHum !== null && p.hotHum !== undefined)    parts.push(pill(`${p.hotHum}% RH (hot)`, "pet-pill-neutral"));
+  if (p.coolHum !== null && p.coolHum !== undefined)  parts.push(pill(`${p.coolHum}% RH (cool)`, "pet-pill-neutral"));
+  if (p.husbandry) parts.push(pill(`🏠 ${p.husbandry}`, "pet-pill-note"));
+  if (p.health)    parts.push(pill(`⚕ ${p.health}`, "pet-pill-health"));
+  return parts.length
+    ? `<div class="pet-summary-pills">${parts.join("")}</div>`
+    : `<div class="pet-last-log">no details</div>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,12 +96,10 @@ export function renderPets(data, container) {
         <div class="pet-header-left">
           <span class="pet-emoji">🐶</span>
           <div>
-            <div class="pet-header-name">mimic</div>
-            <div class="pet-last-log" id="mimic-last">
-              ${data.mimic
-                ? `${fmtRelative(data.mimic.date)}${data.mimic.weight ? ` · ${data.mimic.weight} lbs` : ""}${data.mimic.behavior.length ? ` · ${data.mimic.behavior.slice(0,2).join(", ")}` : ""}`
-                : "no logs yet"}
+            <div class="pet-header-name">mimic
+              ${data.mimic ? `<span class="pet-entry-date">${fmtRelative(data.mimic.date)}</span>` : ""}
             </div>
+            ${data.mimic ? mimicSummary(data.mimic) : `<div class="pet-last-log">no logs yet</div>`}
           </div>
         </div>
         <button class="fc-btn fc-primary" id="mimic-toggle-btn">log today</button>
@@ -120,12 +164,10 @@ export function renderPets(data, container) {
         <div class="pet-header-left">
           <span class="pet-emoji">🐍</span>
           <div>
-            <div class="pet-header-name">pumpkin</div>
-            <div class="pet-last-log" id="pumpkin-last">
-              ${data.pumpkin
-                ? `${fmtRelative(data.pumpkin.date)}${data.pumpkin.weight ? ` · ${data.pumpkin.weight}g` : ""}${data.pumpkin.feeding ? ` · feeding: ${data.pumpkin.feeding}` : ""}`
-                : "no logs yet"}
+            <div class="pet-header-name">pumpkin
+              ${data.pumpkin ? `<span class="pet-entry-date">${fmtRelative(data.pumpkin.date)}</span>` : ""}
             </div>
+            ${data.pumpkin ? pumpkinSummary(data.pumpkin) : `<div class="pet-last-log">no logs yet</div>`}
           </div>
         </div>
         <button class="fc-btn fc-primary" id="pumpkin-toggle-btn">log today</button>
