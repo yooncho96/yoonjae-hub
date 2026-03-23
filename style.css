@@ -176,7 +176,7 @@ a:hover { opacity: 0.72; }
 
 /* Psychopharm-specific: 3 columns instead of 5 */
 .pharm-matrix {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* Knowledge-on tags inside pharm rows */
@@ -666,12 +666,15 @@ code { background:#f0ede8; padding:1px 5px; border-radius:4px; font-family:'JetB
   .cc-chips { justify-content:flex-start; }
   .quicklinks-bar { padding:8px 16px; flex-wrap:wrap; }
   .psych-matrix { grid-template-columns:repeat(3,minmax(130px,1fr)); }
+  .pharm-matrix { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .viewer-panel { width:100vw; }
   .pet-form-grid { grid-template-columns:1fr; }
   .pet-form-grid .form-group[style*="grid-column"] { grid-column: 1 !important; }
 }
 @media (max-width:600px) {
   .psych-matrix { grid-template-columns:repeat(2,minmax(130px,1fr)); }
+  .pharm-matrix { grid-template-columns:1fr; }
+  .matrix-col   { min-width:0; }
   .kb-search { width:90px; }
   .kb-search:focus { width:120px; }
 }
