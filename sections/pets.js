@@ -291,15 +291,18 @@ function wirePetForm(container, pet, saveFn) {
       await saveFn(container);
       saveMsg.style.color = "var(--moss-700)";
       saveMsg.textContent = "saved ✓";
-      setTimeout(() => {
-        form.style.display = "none";
-        toggleBtn.textContent = "log today";
+      // Bust the cache so the reloaded card shows the new entry
+      try { localStorage.removeItem("hub:cache:pets"); } catch {}
+      setTimeout(async () => {
+        closeForm();
         saveMsg.textContent = "";
+        // Reload the whole card so the summary reflects the new entry
+        const fresh = await loadPets();
+        renderPets(fresh, container);
       }, 1400);
     } catch (err) {
       saveMsg.style.color = "var(--red-500)";
       saveMsg.textContent = `Failed: ${err.message}`;
-    } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = "save entry";
     }

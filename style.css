@@ -367,6 +367,7 @@ a:hover { opacity: 0.72; }
   font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .s3-empty { font-size: 12px; color: var(--sand-300); font-style: italic; font-family: 'Lora', serif; }
+.s3-done-badge { font-size:11px; padding:4px 10px; border-radius:16px; background:var(--moss-100); color:var(--moss-700); border:0.5px solid var(--moss-500); font-weight:500; white-space:nowrap; flex-shrink:0; }
 
 .step3-score-input {
   display: flex; align-items: center; gap: 7px;

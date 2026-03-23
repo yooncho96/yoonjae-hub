@@ -126,7 +126,8 @@ export async function loadStep3() {
     doneSessions: done.length,
     goal: STEP3_GOAL,
     todayRow: todayRow ? {
-      id: todayRow.id,
+      id:      todayRow.id,
+      done:    prop(todayRow, "Done") === true,
       subject: prop(todayRow, "Subject") || "",
       qs:      prop(todayRow, "Qs") || "",
       notes:   prop(todayRow, "Notes") || "",
@@ -167,18 +168,28 @@ export function renderStep3(d, container) {
 
     <!-- Today's session info + log score button -->
     <div class="step3-today-row" id="step3-today-row">
-      ${d.todayRow
-        ? `<div class="step3-today-info">
-            ${d.todayRow.subject ? `<span class="s3-subject">${d.todayRow.subject}</span>` : ""}
-            ${d.todayRow.qs      ? `<span class="s3-detail">${d.todayRow.qs} Qs</span>` : ""}
-            ${d.todayRow.notes   ? `<span class="s3-detail s3-notes">${d.todayRow.notes}</span>` : ""}
-           </div>`
-        : `<div class="step3-today-info s3-empty">no session today</div>`}
-      <button class="fc-btn fc-primary" id="step3-log-btn">
-        ${d.todayRow?.score !== null && d.todayRow?.score !== undefined
-          ? `score: ${d.todayRow.score}% ✓`
-          : "log score"}
-      </button>
+      ${!d.todayRow
+        ? `<div class="step3-today-info s3-empty">no session today</div>
+           <button class="fc-btn fc-primary" id="step3-log-btn">log score</button>`
+        : d.todayRow.done
+          ? `<div class="step3-today-info">
+               ${d.todayRow.subject ? `<span class="s3-subject">${d.todayRow.subject}</span>` : ""}
+               <span class="s3-detail">
+                 ${d.todayRow.qs ? `${d.todayRow.qs} Qs` : ""}
+                 ${d.todayRow.score !== null && d.todayRow.score !== undefined ? ` · ${d.todayRow.score}%` : ""}
+               </span>
+             </div>
+             <span class="s3-done-badge">done ✓</span>`
+          : `<div class="step3-today-info">
+               ${d.todayRow.subject ? `<span class="s3-subject">${d.todayRow.subject}</span>` : ""}
+               ${d.todayRow.qs      ? `<span class="s3-detail">${d.todayRow.qs} Qs</span>` : ""}
+               ${d.todayRow.notes   ? `<span class="s3-detail s3-notes">${d.todayRow.notes}</span>` : ""}
+             </div>
+             <button class="fc-btn fc-primary" id="step3-log-btn">
+               ${d.todayRow.score !== null && d.todayRow.score !== undefined
+                 ? `score: ${d.todayRow.score}% ✓`
+                 : "log score"}
+             </button>`}
     </div>
 
     <!-- Inline score input — hidden until button clicked -->
@@ -199,7 +210,7 @@ export function renderStep3(d, container) {
     </div>
   `;
 
-  // Wire up log score flow
+  // Wire up log score flow (logBtn absent when session is marked Done)
   const logBtn     = document.getElementById("step3-log-btn");
   const inputRow   = document.getElementById("step3-score-input");
   const scoreInput = document.getElementById("step3-score-val");
@@ -207,13 +218,15 @@ export function renderStep3(d, container) {
   const cancelBtn  = document.getElementById("step3-score-cancel");
   const saveMsg    = document.getElementById("step3-save-msg");
 
-  logBtn.addEventListener("click", () => {
-    if (!d.todayRow) { window.open(nlink(IDS.uworldTracker), "_blank"); return; }
-    inputRow.style.display = "flex";
-    logBtn.style.display = "none";
-    scoreInput.focus();
-    if (d.todayRow.score !== null) scoreInput.value = d.todayRow.score;
-  });
+  if (logBtn) {
+    logBtn.addEventListener("click", () => {
+      if (!d.todayRow) { window.open(nlink(IDS.uworldTracker), "_blank"); return; }
+      inputRow.style.display = "flex";
+      logBtn.style.display = "none";
+      scoreInput.focus();
+      if (d.todayRow.score !== null) scoreInput.value = d.todayRow.score;
+    });
+  }
 
   cancelBtn.addEventListener("click", () => {
     inputRow.style.display = "none";
