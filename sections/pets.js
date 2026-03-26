@@ -137,7 +137,7 @@ export function renderPets(data, container) {
             <input class="form-input" type="number" step="0.1" placeholder="lbs" id="mimic-weight"/>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column:1/3;">
             <label class="form-label">training</label>
             <textarea class="form-input" rows="2" placeholder="Notes on training…" id="mimic-training"></textarea>
           </div>

@@ -29,6 +29,15 @@ if (qlDate) qlDate.textContent = new Date().toLocaleDateString("en-US", {
   weekday: "short", month: "short", day: "numeric"
 });
 
+// Refresh button
+const refreshBtn = document.getElementById("ql-refresh-btn");
+if (refreshBtn) {
+  refreshBtn.addEventListener("click", () => {
+    refreshBtn.classList.add("spinning");
+    setTimeout(() => location.reload(), 300);
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // VIEW TAB SWITCHING (Home ↔ Knowledge)
 // ─────────────────────────────────────────────────────────────────────────────
