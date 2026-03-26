@@ -116,10 +116,10 @@ a:hover { opacity: 0.72; }
 
 /* ── MAIN GRID ──────────────────────────────────────────────────────────── */
 .cc-main { display:grid; grid-template-columns:1fr 320px; gap:18px; padding:0 32px; align-items:start; }
-.cc-col-left, .cc-col-right { display:flex; flex-direction:column; gap:14px; }
+.cc-col-left, .cc-col-right { display:flex; flex-direction:column; gap:14px; min-width:0; }
 
 /* Tasks + Pets sub-row inside left column */
-.col-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+.col-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; min-width:0; }
 
 /* Knowledge view — full width card */
 .cc-knowledge { padding: 0 32px; }
@@ -166,7 +166,7 @@ a:hover { opacity: 0.72; }
 
 /* ── KNOWLEDGE BASE TABS ────────────────────────────────────────────────── */
 .kb-tabs {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap; row-gap: 6px;
   margin-bottom: 14px; border-bottom: 0.5px solid var(--sand-200);
   padding-bottom: 10px;
 }
@@ -507,6 +507,45 @@ th.nb-td {
 .viewer-error { padding:20px 0; }
 .viewer-error p { font-size:14px; color:var(--sand-600); margin-bottom:8px; }
 .viewer-error-detail { font-size:12px; color:var(--sand-400); font-family:'JetBrains Mono',monospace; }
+
+/* ── PET HISTORY PANEL ──────────────────────────────────────────────────── */
+.pet-history-overlay {
+  position:fixed; inset:0; background:rgba(58,44,28,0.3); z-index:500;
+  opacity:0; pointer-events:none; transition:opacity 0.25s;
+}
+.pet-history-overlay.active { opacity:1; pointer-events:all; }
+
+.pet-history-panel {
+  position:fixed; top:0; right:0; bottom:0; width:min(560px,92vw);
+  background:#fff; z-index:501; display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform 0.28s cubic-bezier(.4,0,.2,1);
+  border-left:0.5px solid var(--sand-200); box-shadow:-8px 0 32px rgba(58,44,28,0.08);
+}
+.pet-history-panel.active { transform:translateX(0); }
+
+.pet-history-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 22px 14px; border-bottom:0.5px solid var(--sand-200); flex-shrink:0; gap:12px;
+}
+.pet-history-title { font-family:'Lora',serif; font-size:18px; font-weight:400; color:var(--sand-800); margin:0; }
+.pet-history-header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.pet-history-notion-link { font-size:11px; color:var(--sky-500); white-space:nowrap; }
+.pet-history-close { background:none; border:none; font-size:16px; color:var(--sand-400); cursor:pointer; padding:2px 4px; line-height:1; }
+.pet-history-close:hover { color:var(--sand-800); }
+
+.pet-history-body { flex:1; overflow-y:auto; padding:16px 22px 40px; }
+
+.pet-history-entry {
+  padding:12px 0;
+  border-bottom:0.5px solid var(--sand-100);
+}
+.pet-history-entry:last-child { border-bottom:none; }
+.pet-history-entry-top { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
+.pet-history-entry-date { font-size:13px; font-weight:500; color:var(--sand-700); }
+.pet-history-entry-link { font-size:11px; color:var(--sky-500); white-space:nowrap; flex-shrink:0; }
+.pet-history-empty { font-size:13px; color:var(--sand-400); padding:24px 0; text-align:center; }
+
+.pet-header-actions { display:flex; align-items:center; gap:6px; }
 
 /* ── NOTION BLOCK STYLES ─────────────────────────────────────────────────── */
 /* These styles make the rendered page content look close to Notion's own UI */
