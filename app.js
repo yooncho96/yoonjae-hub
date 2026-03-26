@@ -158,6 +158,7 @@ function updateSubhead(tasks) {
 const MOOD_NOTES = {
   grounded: "Solid footing. Good day to push through something hard.",
   tired:    "Rest is part of the work. Protect your margins today.",
+  awful:    "Sorry you're feeling this way. Try to be kind to yourself today.",
   scattered:"Worth naming before the day gets away from you.",
   okay:     "Okay is enough right now.",
 };

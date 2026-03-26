@@ -1,6 +1,38 @@
 import { api, IDS, prop, pageTitle, fmtRelative, todayStr, nlink } from "./data.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PAGE MAPPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function mapMimicPage(page) {
+  return {
+    id:        page.id,
+    date:      prop(page, "date"),
+    weight:    prop(page, "weight"),
+    behavior:  prop(page, "behavior")        || [],
+    schedMeds: prop(page, "scheduled meds")  || [],
+    prnMeds:   prop(page, "PRN meds")        || [],
+    training:  prop(page, "training")        || "",
+    health:    prop(page, "health comments") || "",
+  };
+}
+
+function mapPumpkinPage(page) {
+  return {
+    id:        page.id,
+    date:      prop(page, "date"),
+    weight:    prop(page, "weight"),
+    hotTemp:   prop(page, "hot zone temp"),
+    coolTemp:  prop(page, "cool zone temp"),
+    hotHum:    prop(page, "hot zone humidity"),
+    coolHum:   prop(page, "cool zone humidity"),
+    feeding:   prop(page, "feeding"),
+    shed:      prop(page, "shed"),
+    husbandry: prop(page, "husbandry change") || "",
+    health:    prop(page, "health comments")  || "",
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DATA LOADER
 // ─────────────────────────────────────────────────────────────────────────────
 export async function loadPets() {
@@ -19,30 +51,93 @@ export async function loadPets() {
   const lastPumpkin = (pumpkinData.results || [])[0] || null;
 
   return {
-    mimic: lastMimic ? {
-      id:           lastMimic.id,
-      date:         prop(lastMimic, "date"),
-      weight:       prop(lastMimic, "weight"),
-      behavior:     prop(lastMimic, "behavior")       || [],
-      schedMeds:    prop(lastMimic, "scheduled meds") || [],
-      prnMeds:      prop(lastMimic, "PRN meds")       || [],
-      training:     prop(lastMimic, "training")       || "",
-      health:       prop(lastMimic, "health comments")|| "",
-    } : null,
-    pumpkin: lastPumpkin ? {
-      id:        lastPumpkin.id,
-      date:      prop(lastPumpkin, "date"),
-      weight:    prop(lastPumpkin, "weight"),
-      hotTemp:   prop(lastPumpkin, "hot zone temp"),
-      coolTemp:  prop(lastPumpkin, "cool zone temp"),
-      hotHum:    prop(lastPumpkin, "hot zone humidity"),
-      coolHum:   prop(lastPumpkin, "cool zone humidity"),
-      feeding:   prop(lastPumpkin, "feeding"),
-      shed:      prop(lastPumpkin, "shed"),
-      husbandry: prop(lastPumpkin, "husbandry change") || "",
-      health:    prop(lastPumpkin, "health comments")  || "",
-    } : null,
+    mimic:   lastMimic   ? mapMimicPage(lastMimic)     : null,
+    pumpkin: lastPumpkin ? mapPumpkinPage(lastPumpkin)  : null,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PET HISTORY PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+let histPanel, histOverlay, histTitleEl, histNotionLinkEl, histBodyEl;
+
+function initPetHistory() {
+  if (histPanel) return;
+
+  histOverlay = document.createElement("div");
+  histOverlay.className = "pet-history-overlay";
+  histOverlay.addEventListener("click", closePetHistory);
+
+  histPanel = document.createElement("div");
+  histPanel.className = "pet-history-panel";
+  histPanel.innerHTML = `
+    <div class="pet-history-header">
+      <h2 class="pet-history-title" id="pet-history-title">history</h2>
+      <div class="pet-history-header-right">
+        <a class="pet-history-notion-link" id="pet-history-notion-link" target="_blank">Open in Notion ↗</a>
+        <button class="pet-history-close" id="pet-history-close" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="pet-history-body" id="pet-history-body">
+      <div class="viewer-loading"><div class="viewer-spinner"></div><span>Loading…</span></div>
+    </div>
+  `;
+
+  document.body.appendChild(histOverlay);
+  document.body.appendChild(histPanel);
+
+  histTitleEl      = document.getElementById("pet-history-title");
+  histNotionLinkEl = document.getElementById("pet-history-notion-link");
+  histBodyEl       = document.getElementById("pet-history-body");
+  document.getElementById("pet-history-close").addEventListener("click", closePetHistory);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && histPanel.classList.contains("active")) closePetHistory();
+  });
+}
+
+async function openPetHistory(dbId, petName, mapFn, summaryFn) {
+  initPetHistory();
+
+  histTitleEl.textContent = `${petName} · history`;
+  histNotionLinkEl.href   = nlink(dbId);
+  histBodyEl.innerHTML    = `<div class="viewer-loading"><div class="viewer-spinner"></div><span>Fetching records…</span></div>`;
+
+  histOverlay.classList.add("active");
+  histPanel.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  try {
+    const data = await api("query", dbId, {
+      sorts: [{ property: "date", direction: "descending" }],
+      page_size: 50,
+    });
+    const entries = (data.results || []).map(mapFn);
+
+    if (!entries.length) {
+      histBodyEl.innerHTML = `<p class="pet-history-empty">No records found.</p>`;
+      return;
+    }
+
+    histBodyEl.innerHTML = entries.map(entry => `
+      <div class="pet-history-entry">
+        <div class="pet-history-entry-top">
+          <span class="pet-history-entry-date">${entry.date || "no date"}</span>
+          <a class="pet-history-entry-link" href="${nlink(entry.id)}" target="_blank">open ↗</a>
+        </div>
+        ${summaryFn(entry)}
+      </div>
+    `).join("");
+  } catch (err) {
+    histBodyEl.innerHTML = `<p class="pet-history-empty">Failed to load: ${err.message}</p>`;
+  }
+}
+
+function closePetHistory() {
+  if (!histPanel) return;
+  histOverlay.classList.remove("active");
+  histPanel.classList.remove("active");
+  document.body.style.overflow = "";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,7 +197,10 @@ export function renderPets(data, container) {
             ${data.mimic ? mimicSummary(data.mimic) : `<div class="pet-last-log">no logs yet</div>`}
           </div>
         </div>
-        <button class="fc-btn fc-primary" id="mimic-toggle-btn">log today</button>
+        <div class="pet-header-actions">
+          <button class="fc-btn" id="mimic-history-btn">history</button>
+          <button class="fc-btn fc-primary" id="mimic-toggle-btn">log today</button>
+        </div>
       </div>
 
       <div class="pet-form" id="mimic-form">
@@ -170,7 +268,10 @@ export function renderPets(data, container) {
             ${data.pumpkin ? pumpkinSummary(data.pumpkin) : `<div class="pet-last-log">no logs yet</div>`}
           </div>
         </div>
-        <button class="fc-btn fc-primary" id="pumpkin-toggle-btn">log today</button>
+        <div class="pet-header-actions">
+          <button class="fc-btn" id="pumpkin-history-btn">history</button>
+          <button class="fc-btn fc-primary" id="pumpkin-toggle-btn">log today</button>
+        </div>
       </div>
 
       <div class="pet-form" id="pumpkin-form">
@@ -240,6 +341,11 @@ export function renderPets(data, container) {
   wireChipSelects(container);
   wirePetForm(container, "mimic",   saveMimic);
   wirePetForm(container, "pumpkin", savePumpkin);
+
+  document.getElementById("mimic-history-btn").addEventListener("click", () =>
+    openPetHistory(IDS.mimic, "🐶 mimic", mapMimicPage, mimicSummary));
+  document.getElementById("pumpkin-history-btn").addEventListener("click", () =>
+    openPetHistory(IDS.pumpkin, "🐍 pumpkin", mapPumpkinPage, pumpkinSummary));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
