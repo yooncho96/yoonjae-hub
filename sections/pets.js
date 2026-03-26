@@ -147,14 +147,19 @@ function pill(text, style = "") {
   return `<span class="pet-summary-pill${style ? " " + style : ""}">${text}</span>`;
 }
 
+function first8(text) {
+  const words = text.trim().split(/\s+/);
+  return words.length <= 8 ? text : words.slice(0, 8).join(" ") + "…";
+}
+
 function mimicSummary(m) {
   const parts = [];
   if (m.weight)             parts.push(pill(`${m.weight} lbs`, "pet-pill-neutral"));
   m.behavior.forEach(b =>   parts.push(pill(b)));
   m.schedMeds.forEach(s =>  parts.push(pill(s, "pet-pill-med")));
   m.prnMeds.forEach(p =>    parts.push(pill(p, "pet-pill-prn")));
-  if (m.training)           parts.push(pill(`training: ${m.training}`, "pet-pill-note"));
-  if (m.health)             parts.push(pill(`⚕ ${m.health}`, "pet-pill-health"));
+  if (m.training)           parts.push(pill(`training: ${first8(m.training)}`, "pet-pill-note"));
+  if (m.health)             parts.push(pill(`⚕ ${first8(m.health)}`, "pet-pill-health"));
   return parts.length
     ? `<div class="pet-summary-pills">${parts.join("")}</div>`
     : `<div class="pet-last-log">no details</div>`;
@@ -169,8 +174,8 @@ function pumpkinSummary(p) {
   if (p.coolTemp !== null && p.coolTemp !== undefined) parts.push(pill(`cool ${p.coolTemp}°F`, "pet-pill-neutral"));
   if (p.hotHum !== null && p.hotHum !== undefined)    parts.push(pill(`${p.hotHum}% RH (hot)`, "pet-pill-neutral"));
   if (p.coolHum !== null && p.coolHum !== undefined)  parts.push(pill(`${p.coolHum}% RH (cool)`, "pet-pill-neutral"));
-  if (p.husbandry) parts.push(pill(`🏠 ${p.husbandry}`, "pet-pill-note"));
-  if (p.health)    parts.push(pill(`⚕ ${p.health}`, "pet-pill-health"));
+  if (p.husbandry) parts.push(pill(`🏠 ${first8(p.husbandry)}`, "pet-pill-note"));
+  if (p.health)    parts.push(pill(`⚕ ${first8(p.health)}`, "pet-pill-health"));
   return parts.length
     ? `<div class="pet-summary-pills">${parts.join("")}</div>`
     : `<div class="pet-last-log">no details</div>`;

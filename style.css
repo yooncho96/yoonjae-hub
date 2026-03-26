@@ -120,6 +120,7 @@ a:hover { opacity: 0.72; }
 
 /* Tasks + Pets sub-row inside left column */
 .col-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; min-width:0; }
+.col-left-bottom > .card { min-width: 0; overflow: hidden; }
 
 /* Knowledge view — full width card */
 .cc-knowledge { padding: 0 32px; }
@@ -279,7 +280,7 @@ a:hover { opacity: 0.72; }
 .mini-row:last-child { border-bottom:none; }
 .task-row { cursor:pointer; border-radius:6px; transition:background 0.12s; }
 .task-row:hover { background:var(--sand-50); }
-.mini-label { font-size:13px; color:var(--sand-800); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+.mini-label { font-size:13px; color:var(--sand-800); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
 .mini-label.overdue   { color:var(--red-500); }
 .mini-label.due-today { color:var(--terra-600); font-weight:500; }
 .mini-val { font-size:11px; color:var(--sand-400); font-weight:300; flex-shrink:0; }
@@ -326,7 +327,7 @@ a:hover { opacity: 0.72; }
 /* Pets — new full log design */
 .pet-section { margin-bottom: 4px; }
 .pet-header { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.pet-header-left { display:flex; align-items:center; gap:10px; }
+.pet-header-left { display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
 .pet-emoji { font-size:20px; flex-shrink:0; }
 .pet-header-name { font-size:13px; font-weight:500; color:var(--sand-800); }
 .pet-last-log { font-size:11px; color:var(--sand-400); margin-top:1px; }
@@ -544,6 +545,8 @@ th.nb-td {
 .pet-history-entry-date { font-size:13px; font-weight:500; color:var(--sand-700); }
 .pet-history-entry-link { font-size:11px; color:var(--sky-500); white-space:nowrap; flex-shrink:0; }
 .pet-history-empty { font-size:13px; color:var(--sand-400); padding:24px 0; text-align:center; }
+.pet-history-body .pet-summary-pill { white-space: normal; word-break: break-word; }
+.pet-history-body .pet-pill-note { max-width: none; }
 
 .pet-header-actions { display:flex; align-items:center; gap:6px; }
 
