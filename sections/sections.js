@@ -33,8 +33,8 @@ export async function loadSchedule() {
 
 export function renderSchedule(events, container) {
   const t = todayStr();
-  const todayEvents   = events.filter(e => e.date === t);
-  const upcomingEvents = events.filter(e => e.date > t);
+  const todayEvents   = events.filter(e => (e.date || "").slice(0, 10) === t);
+  const upcomingEvents = events.filter(e => (e.date || "").slice(0, 10) > t);
 
   container.innerHTML = `
     <div class="section-title-row">
@@ -179,17 +179,26 @@ export function renderStep3(d, container) {
                  ${d.todayRow.score !== null && d.todayRow.score !== undefined ? ` · ${d.todayRow.score}%` : ""}
                </span>
              </div>
-             <span class="s3-done-badge">done ✓</span>`
+             <label class="s3-done-check-label">
+               <input type="checkbox" id="step3-done-check" checked disabled/>
+               done ✓
+             </label>`
           : `<div class="step3-today-info">
                ${d.todayRow.subject ? `<span class="s3-subject">${d.todayRow.subject}</span>` : ""}
                ${d.todayRow.qs      ? `<span class="s3-detail">${d.todayRow.qs} Qs</span>` : ""}
                ${d.todayRow.notes   ? `<span class="s3-detail s3-notes">${d.todayRow.notes}</span>` : ""}
              </div>
-             <button class="fc-btn fc-primary" id="step3-log-btn">
-               ${d.todayRow.score !== null && d.todayRow.score !== undefined
-                 ? `score: ${d.todayRow.score}% ✓`
-                 : "log score"}
-             </button>`}
+             <div class="s3-actions">
+               <button class="fc-btn fc-primary" id="step3-log-btn">
+                 ${d.todayRow.score !== null && d.todayRow.score !== undefined
+                   ? `score: ${d.todayRow.score}% ✓`
+                   : "log score"}
+               </button>
+               <label class="s3-done-check-label">
+                 <input type="checkbox" id="step3-done-check"/>
+                 done
+               </label>
+             </div>`}
     </div>
 
     <!-- Inline score input — hidden until button clicked -->
@@ -263,6 +272,24 @@ export function renderStep3(d, container) {
     if (e.key === "Enter") saveBtn.click();
     if (e.key === "Escape") cancelBtn.click();
   });
+
+  // Wire up Done checkbox
+  const doneCheck = document.getElementById("step3-done-check");
+  if (doneCheck && d.todayRow && !d.todayRow.done) {
+    doneCheck.addEventListener("change", async () => {
+      if (!doneCheck.checked) return;
+      doneCheck.disabled = true;
+      try {
+        await api("update", d.todayRow.id, { properties: { Done: { checkbox: true } } });
+        d.todayRow.done = true;
+        doneCheck.parentElement.textContent = "done ✓";
+        doneCheck.parentElement.insertAdjacentHTML("afterbegin", '<input type="checkbox" checked disabled style="margin-right:4px;"/>');
+      } catch (err) {
+        doneCheck.checked = false;
+        doneCheck.disabled = false;
+      }
+    });
+  }
 
   // Wire up editable goal
   const goalValEl   = container.querySelector(".s3-goal-val");
