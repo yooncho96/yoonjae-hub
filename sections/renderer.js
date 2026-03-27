@@ -110,6 +110,42 @@ function renderBlock(block) {
           </figure>`
         : "";
 
+    case "pdf": {
+      const pdfUrl = block.pdf?.file?.url || block.pdf?.external?.url || "";
+      const pdfCaptionArr = block.pdf?.caption || [];
+      const pdfPlainName = pdfCaptionArr.map(r => r.plain_text).join("") || "PDF Document";
+      const pdfCaption = renderRichText(pdfCaptionArr) || "PDF Document";
+      return pdfUrl
+        ? `<div class="nb-pdf-wrap">
+            <iframe src="${escAttr(pdfUrl)}" class="nb-pdf-embed" title="${escAttr(pdfPlainName)}"></iframe>
+            <div class="nb-pdf-footer">
+              <span class="nb-pdf-icon">📄</span>
+              <a href="${escAttr(pdfUrl)}" target="_blank" class="nb-pdf-link">${pdfCaption}</a>
+            </div>
+          </div>`
+        : "";
+    }
+
+    case "file": {
+      const fileUrl = block.file?.file?.url || block.file?.external?.url || "";
+      const fileName = block.file?.name || renderRichText(block.file?.caption || []) || "Attachment";
+      const isPdf = fileName.toLowerCase().endsWith(".pdf") || fileUrl.toLowerCase().includes(".pdf");
+      if (!fileUrl) return "";
+      if (isPdf) {
+        return `<div class="nb-pdf-wrap">
+            <iframe src="${escAttr(fileUrl)}" class="nb-pdf-embed" title="${escAttr(fileName)}"></iframe>
+            <div class="nb-pdf-footer">
+              <span class="nb-pdf-icon">📄</span>
+              <a href="${escAttr(fileUrl)}" target="_blank" class="nb-pdf-link">${escHtml(fileName)}</a>
+            </div>
+          </div>`;
+      }
+      return `<div class="nb-attachment">
+          <span class="nb-attachment-icon">📎</span>
+          <a href="${escAttr(fileUrl)}" target="_blank" class="nb-pdf-link">${escHtml(fileName)}</a>
+        </div>`;
+    }
+
     case "column_list":
       // Columns need children — placeholder filled in async pass
       return `<div class="nb-columns" data-block-id="${block.id}" data-columns-pending="${block.id}">
