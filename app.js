@@ -1,4 +1,5 @@
 import { daysUntil, IDS, api, todayStr } from "./sections/data.js";
+import { loadTriage, renderTriageKanban } from "./sections/triage.js";
 import { initViewer } from "./sections/viewer.js";
 import { initAddForm } from "./sections/addform.js";
 import { loadPsychiatryMatrix, renderPsychiatryMatrix } from "./sections/psychiatry.js";
@@ -120,6 +121,16 @@ const sections = [
     label: "Pets",
   },
 ];
+
+// Load triage (no cache — always fresh)
+const triageEl = document.getElementById("card-triage");
+if (triageEl) {
+  loadTriage()
+    .then(data => renderTriageKanban(data, triageEl))
+    .catch(() => {
+      triageEl.innerHTML = `<div class="card-label">triage</div><div class="empty-state" style="color:var(--red-500);">Failed to load triage data.</div>`;
+    });
+}
 
 sections.forEach(({ load, render, containerId, label }) => {
   const el = document.getElementById(containerId);
