@@ -30,10 +30,41 @@ function getNotionText(page, prop) {
   return "";
 }
 
+// ── Ensure Notion DB has all required properties (runs once per cold start) ─
+let schemaEnsured = false;
+async function ensureMailCacheSchema(CACHE_DB) {
+  if (schemaEnsured) return;
+  try {
+    const db = await notionReq("GET", `/databases/${CACHE_DB}`);
+    if (!db?.properties) return;
+    const existing = db.properties;
+    const updates = {};
+
+    // Rename title property to "Subject" if it has a different name
+    const titleEntry = Object.entries(existing).find(([, v]) => v.type === "title");
+    if (titleEntry && titleEntry[0] !== "Subject") {
+      updates[titleEntry[0]] = { name: "Subject" };
+    }
+
+    // Add missing properties
+    for (const name of ["From", "MessageID", "OsaMsgId", "Date", "Labels"]) {
+      if (!existing[name]) updates[name] = { rich_text: {} };
+    }
+    if (!existing.MailLink) updates.MailLink = { url: {} };
+    if (!existing.SyncedAt) updates.SyncedAt = { date: {} };
+
+    if (Object.keys(updates).length > 0) {
+      await notionReq("PATCH", `/databases/${CACHE_DB}`, { properties: updates });
+    }
+    schemaEnsured = true;
+  } catch { /* non-fatal */ }
+}
+
 // ── Sync UT Austin emails → Notion cache ───────────────────────────────────
 async function syncResearchToNotion(emails) {
   const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
   if (!CACHE_DB || !emails.length) return;
+  await ensureMailCacheSchema(CACHE_DB);
 
   const existing = await notionReq("POST", `/databases/${CACHE_DB}/query`, { page_size: 100 });
   const byOsaId = {};
@@ -80,6 +111,7 @@ async function syncResearchToNotion(emails) {
 async function fetchResearchFromNotion() {
   const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
   if (!CACHE_DB) return [];
+  await ensureMailCacheSchema(CACHE_DB);
   const data = await notionReq("POST", `/databases/${CACHE_DB}/query`, {
     sorts: [{ property: "SyncedAt", direction: "descending" }],
     page_size: 30,
@@ -366,9 +398,9 @@ export default async function handler(req, res) {
 
     let researchEmails;
     if (process.platform === "darwin") {
-      // Live fetch on Mac → sync to Notion cache in background
+      // Live fetch on Mac → sync to Notion cache (awaited so first refresh always populates)
       researchEmails = fetchResearchEmails();
-      syncResearchToNotion(researchEmails).catch(() => {});
+      await syncResearchToNotion(researchEmails).catch(() => {});
     } else {
       // Non-Mac → read from Notion cache
       researchEmails = await fetchResearchFromNotion();

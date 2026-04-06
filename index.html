@@ -56,11 +56,82 @@
         <div class="card" id="card-pets">
           <div class="skeleton-block" style="height:160px;"></div>
         </div>
+
+        <!-- Wellbeing check-in -->
+        <div class="card" id="card-wellbeing">
+          <div class="section-title-row" style="margin-bottom:10px;">
+            <div class="card-label" style="margin-bottom:0;">check in</div>
+            <button class="wb-save-btn" id="wellbeing-save-btn">save →</button>
+          </div>
+
+          <div class="wb-row">
+            <span class="wb-label">mood</span>
+            <div class="wb-chips" data-field="mood" data-type="select">
+              <div class="mood-chip" data-val="grounded">grounded</div>
+              <div class="mood-chip" data-val="okay">okay</div>
+              <div class="mood-chip" data-val="tired">tired</div>
+              <div class="mood-chip" data-val="scattered">scattered</div>
+              <div class="mood-chip" data-val="awful">awful</div>
+            </div>
+          </div>
+
+          <div class="wb-row">
+            <span class="wb-label">sleep</span>
+            <div class="wb-chips" data-field="sleep" data-type="select">
+              <div class="mood-chip" data-val="great">great</div>
+              <div class="mood-chip" data-val="okay">okay</div>
+              <div class="mood-chip" data-val="poor">poor</div>
+              <div class="mood-chip" data-val="rough">rough</div>
+            </div>
+          </div>
+
+          <!-- meals + snacks side by side -->
+          <div class="wb-row wb-2col">
+            <div class="wb-col">
+              <span class="wb-label">meals</span>
+              <div class="wb-chips" data-field="meals" data-type="multi">
+                <div class="mood-chip" data-val="breakfast">breakfast</div>
+                <div class="mood-chip" data-val="lunch">lunch</div>
+                <div class="mood-chip" data-val="dinner">dinner</div>
+              </div>
+            </div>
+            <div class="wb-col">
+              <span class="wb-label">snacks</span>
+              <div class="wb-chips" data-field="snacks" data-type="multi">
+                <div class="mood-chip" data-val="healthy">healthy</div>
+                <div class="mood-chip" data-val="okay">okay</div>
+                <div class="mood-chip" data-val="junky">junky</div>
+                <div class="mood-chip" data-val="skipped">none</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- meds + SI side by side -->
+          <div class="wb-row wb-2col" style="border-bottom:none;">
+            <div class="wb-col">
+              <span class="wb-label">meds</span>
+              <div class="wb-chips" data-type="none">
+                <div class="mood-chip wb-check" data-field="morning_meds">☐ am</div>
+                <div class="mood-chip wb-check" data-field="night_meds">☐ pm</div>
+              </div>
+            </div>
+            <div class="wb-col">
+              <span class="wb-label">SI</span>
+              <div class="wb-chips" data-field="SI" data-type="select">
+                <div class="mood-chip" data-val="none">none</div>
+                <div class="mood-chip" data-val="passive">passive</div>
+                <div class="mood-chip" data-val="active">active</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wellbeing-note" id="wb-status"></div>
+        </div>
       </div>
 
     </div>
 
-    <!-- RIGHT column: step3, research, wellbeing -->
+    <!-- RIGHT column: step3, research -->
     <div class="cc-col-right">
 
       <div class="card" id="card-step3">
@@ -69,77 +140,6 @@
 
       <div class="card" id="card-research">
         <div class="skeleton-block" style="height:140px;"></div>
-      </div>
-
-      <!-- Wellbeing check-in -->
-      <div class="card" id="card-wellbeing">
-        <div class="section-title-row" style="margin-bottom:10px;">
-          <div class="card-label" style="margin-bottom:0;">check in</div>
-          <button class="wb-save-btn" id="wellbeing-save-btn">save →</button>
-        </div>
-
-        <div class="wb-row">
-          <span class="wb-label">mood</span>
-          <div class="wb-chips" data-field="mood" data-type="select">
-            <div class="mood-chip" data-val="grounded">grounded</div>
-            <div class="mood-chip" data-val="okay">okay</div>
-            <div class="mood-chip" data-val="tired">tired</div>
-            <div class="mood-chip" data-val="scattered">scattered</div>
-            <div class="mood-chip" data-val="awful">awful</div>
-          </div>
-        </div>
-
-        <div class="wb-row">
-          <span class="wb-label">sleep</span>
-          <div class="wb-chips" data-field="sleep" data-type="select">
-            <div class="mood-chip" data-val="great">great</div>
-            <div class="mood-chip" data-val="okay">okay</div>
-            <div class="mood-chip" data-val="poor">poor</div>
-            <div class="mood-chip" data-val="rough">rough</div>
-          </div>
-        </div>
-
-        <!-- meals + snacks side by side -->
-        <div class="wb-row wb-2col">
-          <div class="wb-col">
-            <span class="wb-label">meals</span>
-            <div class="wb-chips" data-field="meals" data-type="multi">
-              <div class="mood-chip" data-val="breakfast">breakfast</div>
-              <div class="mood-chip" data-val="lunch">lunch</div>
-              <div class="mood-chip" data-val="dinner">dinner</div>
-            </div>
-          </div>
-          <div class="wb-col">
-            <span class="wb-label">snacks</span>
-            <div class="wb-chips" data-field="snacks" data-type="multi">
-              <div class="mood-chip" data-val="healthy">healthy</div>
-              <div class="mood-chip" data-val="okay">okay</div>
-              <div class="mood-chip" data-val="junky">junky</div>
-              <div class="mood-chip" data-val="skipped">none</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- meds + SI side by side -->
-        <div class="wb-row wb-2col" style="border-bottom:none;">
-          <div class="wb-col">
-            <span class="wb-label">meds</span>
-            <div class="wb-chips" data-type="none">
-              <div class="mood-chip wb-check" data-field="morning_meds">☐ am</div>
-              <div class="mood-chip wb-check" data-field="night_meds">☐ pm</div>
-            </div>
-          </div>
-          <div class="wb-col">
-            <span class="wb-label">SI</span>
-            <div class="wb-chips" data-field="SI" data-type="select">
-              <div class="mood-chip" data-val="none">none</div>
-              <div class="mood-chip" data-val="passive">passive</div>
-              <div class="mood-chip" data-val="active">active</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="wellbeing-note" id="wb-status"></div>
       </div>
 
     </div>
