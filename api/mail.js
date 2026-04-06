@@ -79,14 +79,19 @@ async function syncResearchToNotion(emails) {
   for (const email of emails) {
     const oid = email.osaMsgId;
     if (!oid) continue;
+    // Parse email date → ISO YYYY-MM-DD for Notion date property
+    const parsedDate = (() => {
+      try { const d = new Date(email.date); return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0]; }
+      catch { return null; }
+    })();
     const props = {
-      Subject:   { title:     [{ text: { content: email.title || "(no subject)" } }] },
-      From:      { rich_text: [{ text: { content: email.from  || "" } }] },
-      MessageID: { rich_text: [{ text: { content: oid } }] },
-      OsaMsgId:  { rich_text: [{ text: { content: oid } }] },
-      Date:      { rich_text: [{ text: { content: email.date  || "" } }] },
+      Subject:   { title:        [{ text: { content: email.title || "(no subject)" } }] },
+      From:      { rich_text:    [{ text: { content: email.from  || "" } }] },
+      MessageID: { rich_text:    [{ text: { content: oid } }] },
+      OsaMsgId:  { rich_text:    [{ text: { content: oid } }] },
+      Date:      parsedDate ? { date: { start: parsedDate } } : { date: null },
       MailLink:  { url: email.mailLink || null },
-      Labels:    { rich_text: [{ text: { content: (email.labelIds || []).join(",") } }] },
+      Labels:    { multi_select: (email.labelIds || []).map(l => ({ name: l })) },
       SyncedAt:  { date: { start: new Date().toISOString() } },
     };
     if (byOsaId[oid]) {
@@ -117,15 +122,16 @@ async function fetchResearchFromNotion() {
     page_size: 30,
   });
   return (data?.results || []).map(page => {
-    const oid = getNotionText(page, "OsaMsgId");
-    const labels = (getNotionText(page, "Labels") || "").split(",").filter(Boolean);
+    const oid    = getNotionText(page, "OsaMsgId");
+    const labels = (page?.properties?.Labels?.multi_select || []).map(l => l.name);
+    const date   = page?.properties?.Date?.date?.start || "";
     return {
       id:       `ut:${oid}`,
       type:     "email",
       account:  "research",
       title:    getNotionText(page, "Subject") || "(no subject)",
       from:     getNotionText(page, "From"),
-      date:     getNotionText(page, "Date"),
+      date,
       snippet:  "",
       mailLink: getNotionText(page, "MailLink"),
       labelIds: labels,
