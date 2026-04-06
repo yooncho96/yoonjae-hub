@@ -18,6 +18,10 @@ async function notionReq(method, path, body) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error(`[notion] ${method} ${path} → ${res.status}:`, err?.message || err?.code || JSON.stringify(err));
+  }
   return res.ok ? res.json() : null;
 }
 
@@ -46,11 +50,25 @@ async function ensureMailCacheSchema(CACHE_DB) {
       updates[titleEntry[0]] = { name: "Subject" };
     }
 
-    // Add missing properties
-    for (const name of ["From", "MessageID", "OsaMsgId", "Date", "Labels"]) {
+    // Add missing properties with correct types
+    for (const name of ["From", "MessageID", "OsaMsgId"]) {
       if (!existing[name]) updates[name] = { rich_text: {} };
     }
     if (!existing.MailLink) updates.MailLink = { url: {} };
+
+    // Date and Labels need specific types — rename wrong-type props then recreate
+    if (!existing.Date) {
+      updates.Date = { date: {} };
+    } else if (existing.Date.type !== "date") {
+      updates["Date"] = { name: "Date_old" };          // rename away
+      updates["_date_new"] = { name: "Date", date: {} }; // recreate with correct type
+    }
+    if (!existing.Labels) {
+      updates.Labels = { multi_select: {} };
+    } else if (existing.Labels.type !== "multi_select") {
+      updates["Labels"] = { name: "Labels_old" };
+      updates["_labels_new"] = { name: "Labels", multi_select: {} };
+    }
     if (!existing.SyncedAt) updates.SyncedAt = { date: {} };
 
     if (Object.keys(updates).length > 0) {
@@ -224,7 +242,7 @@ async function modifyGmail(token, msgId, add = [], remove = []) {
 // ── AppleScript for UT Austin (macOS localhost only) ──────────────────────
 function buildOsaScript() {
   return `
-set targetAccount to "yoonjae.cho@austin.utexas.edu"
+set targetAccount to "austin.utexas email"
 set maxMessages to 30
 set outputLines to {}
 
@@ -233,7 +251,7 @@ tell application "Mail"
   set unreadMsgs to {}
   set allAccounts to every account
   repeat with acct in allAccounts
-    if email addresses of acct contains targetAccount then
+    if name of acct is targetAccount then
       set allMailboxes to every mailbox of acct
       repeat with mb in allMailboxes
         set mbName to name of mb
@@ -266,7 +284,7 @@ tell application "Mail"
   -- FLAGGED
   set flaggedMsgs to {}
   repeat with acct in allAccounts
-    if email addresses of acct contains targetAccount then
+    if name of acct is targetAccount then
       set allMailboxes to every mailbox of acct
       repeat with mb in allMailboxes
         set mbName to name of mb
@@ -361,9 +379,9 @@ function runOsaAction(osaMsgId, action) {
   const script = `
 tell application "Mail"
   set targetID to "${escaped}"
-  set targetAccount to "yoonjae.cho@austin.utexas.edu"
+  set targetAccount to "austin.utexas email"
   repeat with acct in every account
-    if email addresses of acct contains targetAccount then
+    if name of acct is targetAccount then
       repeat with mb in every mailbox of acct
         try
           repeat with msg in (messages of mb)
