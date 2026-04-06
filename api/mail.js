@@ -81,7 +81,8 @@ async function ensureMailCacheSchema(CACHE_DB) {
 // ── Sync UT Austin emails → Notion cache ───────────────────────────────────
 async function syncResearchToNotion(emails) {
   const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
-  if (!CACHE_DB || !emails.length) return;
+  const dbg = { hasToken: !!process.env.NOTION_TOKEN, hasCacheDb: !!CACHE_DB, emailsIn: emails.length, created: 0, updated: 0, archived: 0, errors: [] };
+  if (!CACHE_DB || !emails.length) return dbg;
   await ensureMailCacheSchema(CACHE_DB);
 
   const existing = await notionReq("POST", `/databases/${CACHE_DB}/query`, { page_size: 100 });
@@ -113,12 +114,14 @@ async function syncResearchToNotion(emails) {
       SyncedAt:  { date: { start: new Date().toISOString() } },
     };
     if (byOsaId[oid]) {
-      await notionReq("PATCH", `/pages/${byOsaId[oid]}`, { properties: {
+      const r = await notionReq("PATCH", `/pages/${byOsaId[oid]}`, { properties: {
         Labels:   props.Labels,
         SyncedAt: props.SyncedAt,
       }});
+      if (r) dbg.updated++; else dbg.errors.push(`update:${oid.slice(0,12)}`);
     } else {
-      await notionReq("POST", "/pages", { parent: { database_id: CACHE_DB }, properties: props });
+      const r = await notionReq("POST", "/pages", { parent: { database_id: CACHE_DB }, properties: props });
+      if (r) dbg.created++; else dbg.errors.push(`create:${oid.slice(0,12)}`);
     }
   }
 
@@ -126,8 +129,10 @@ async function syncResearchToNotion(emails) {
   for (const [oid, pageId] of Object.entries(byOsaId)) {
     if (!freshIds.has(oid)) {
       await notionReq("PATCH", `/pages/${pageId}`, { archived: true });
+      dbg.archived++;
     }
   }
+  return dbg;
 }
 
 // ── Read UT Austin emails from Notion cache ────────────────────────────────
