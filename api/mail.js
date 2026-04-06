@@ -1,7 +1,119 @@
 import { execSync } from "child_process";
 import { writeFileSync, unlinkSync } from "fs";
 
-const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
+const GMAIL_API   = "https://gmail.googleapis.com/gmail/v1/users/me";
+const NOTION_API  = "https://api.notion.com/v1";
+const NOTION_VER  = "2022-06-28";
+
+// ── Direct Notion API helper (no proxy — server-side only) ─────────────────
+async function notionReq(method, path, body) {
+  const token = process.env.NOTION_TOKEN;
+  if (!token) return null;
+  const res = await fetch(`${NOTION_API}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Notion-Version": NOTION_VER,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return res.ok ? res.json() : null;
+}
+
+function getNotionText(page, prop) {
+  const p = page?.properties?.[prop];
+  if (!p) return "";
+  if (p.rich_text) return p.rich_text.map(t => t.plain_text).join("");
+  if (p.title)     return p.title.map(t => t.plain_text).join("");
+  if (p.url)       return p.url || "";
+  return "";
+}
+
+// ── Sync UT Austin emails → Notion cache ───────────────────────────────────
+async function syncResearchToNotion(emails) {
+  const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
+  if (!CACHE_DB || !emails.length) return;
+
+  const existing = await notionReq("POST", `/databases/${CACHE_DB}/query`, { page_size: 100 });
+  const byOsaId = {};
+  for (const page of (existing?.results || [])) {
+    const oid = getNotionText(page, "OsaMsgId");
+    if (oid) byOsaId[oid] = page.id;
+  }
+
+  const freshIds = new Set(emails.map(e => e.osaMsgId).filter(Boolean));
+
+  // Create new / update existing
+  for (const email of emails) {
+    const oid = email.osaMsgId;
+    if (!oid) continue;
+    const props = {
+      Subject:   { title:     [{ text: { content: email.title || "(no subject)" } }] },
+      From:      { rich_text: [{ text: { content: email.from  || "" } }] },
+      MessageID: { rich_text: [{ text: { content: oid } }] },
+      OsaMsgId:  { rich_text: [{ text: { content: oid } }] },
+      Date:      { rich_text: [{ text: { content: email.date  || "" } }] },
+      MailLink:  { url: email.mailLink || null },
+      Labels:    { rich_text: [{ text: { content: (email.labelIds || []).join(",") } }] },
+      SyncedAt:  { date: { start: new Date().toISOString() } },
+    };
+    if (byOsaId[oid]) {
+      await notionReq("PATCH", `/pages/${byOsaId[oid]}`, { properties: {
+        Labels:   props.Labels,
+        SyncedAt: props.SyncedAt,
+      }});
+    } else {
+      await notionReq("POST", "/pages", { parent: { database_id: CACHE_DB }, properties: props });
+    }
+  }
+
+  // Archive stale entries (no longer unread/flagged in Mail)
+  for (const [oid, pageId] of Object.entries(byOsaId)) {
+    if (!freshIds.has(oid)) {
+      await notionReq("PATCH", `/pages/${pageId}`, { archived: true });
+    }
+  }
+}
+
+// ── Read UT Austin emails from Notion cache ────────────────────────────────
+async function fetchResearchFromNotion() {
+  const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
+  if (!CACHE_DB) return [];
+  const data = await notionReq("POST", `/databases/${CACHE_DB}/query`, {
+    sorts: [{ property: "SyncedAt", direction: "descending" }],
+    page_size: 30,
+  });
+  return (data?.results || []).map(page => {
+    const oid = getNotionText(page, "OsaMsgId");
+    const labels = (getNotionText(page, "Labels") || "").split(",").filter(Boolean);
+    return {
+      id:       `ut:${oid}`,
+      type:     "email",
+      account:  "research",
+      title:    getNotionText(page, "Subject") || "(no subject)",
+      from:     getNotionText(page, "From"),
+      date:     getNotionText(page, "Date"),
+      snippet:  "",
+      mailLink: getNotionText(page, "MailLink"),
+      labelIds: labels,
+      osaMsgId: oid,
+    };
+  });
+}
+
+// ── Remove one entry from Notion cache ────────────────────────────────────
+async function removeFromNotionCache(osaMsgId) {
+  const CACHE_DB = process.env.NOTION_MAIL_CACHE_DB_ID;
+  if (!CACHE_DB || !osaMsgId) return;
+  const data = await notionReq("POST", `/databases/${CACHE_DB}/query`, {
+    filter: { property: "OsaMsgId", rich_text: { equals: osaMsgId } },
+    page_size: 1,
+  });
+  for (const page of (data?.results || [])) {
+    await notionReq("PATCH", `/pages/${page.id}`, { archived: true });
+  }
+}
 
 export const config = {
   api: { bodyParser: { sizeLimit: "1mb" } },
@@ -250,15 +362,22 @@ export default async function handler(req, res) {
     if (req.query.op !== "fetch") return res.status(400).json({ error: "op=fetch required" });
 
     const token = await getGmailToken();
-    const [gmailEmails, researchEmails] = await Promise.all([
-      token ? fetchGmailEmails(token) : Promise.resolve([]),
-      Promise.resolve(fetchResearchEmails()),
-    ]);
+    const gmailEmails = token ? await fetchGmailEmails(token) : [];
+
+    let researchEmails;
+    if (process.platform === "darwin") {
+      // Live fetch on Mac → sync to Notion cache in background
+      researchEmails = fetchResearchEmails();
+      syncResearchToNotion(researchEmails).catch(() => {});
+    } else {
+      // Non-Mac → read from Notion cache
+      researchEmails = await fetchResearchFromNotion();
+    }
 
     return res.status(200).json({
       emails: [...gmailEmails, ...researchEmails],
       gmailAvailable: !!token,
-      researchAvailable: process.platform === "darwin",
+      researchAvailable: true,
     });
   }
 
@@ -284,6 +403,8 @@ export default async function handler(req, res) {
       if (op === "restar")      await modifyGmail(token, messageId, ["STARRED"], []);
     } else if (account === "research" && osaMsgId) {
       runOsaAction(osaMsgId, op);
+      // Remove from Notion cache when dismissed (mark_read fires on done + abort)
+      if (op === "mark_read") removeFromNotionCache(osaMsgId).catch(() => {});
     }
 
     return res.status(200).json({ ok: true });

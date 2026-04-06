@@ -151,11 +151,16 @@ function renderCard(item, inArchive = false) {
   const accountClass = { personal: "badge-personal", research: "badge-research", notion: "badge-notion" }[item.account] || "";
   const dateStr = item.type === "email" ? fmtEmailDate(item.date) : fmtDate(item.date);
   const fromStr = item.type === "email" ? fmtFrom(item.from) : item.from;
-  const openBtn = item.type === "email" && item.mailLink
-    ? `<a href="${item.mailLink}" class="tc-action-btn tc-open-btn" title="Open in Mail">Open ↗</a>`
-    : item.type === "task" && item.notionId
-      ? `<a href="${nlink(item.notionId)}" target="_blank" class="tc-action-btn tc-open-btn" title="Open in Notion">Open ↗</a>`
-      : "";
+  let openBtn;
+  if (item.type === "email") {
+    const link = item.mailLink
+      || (item.account === "personal" ? `https://mail.google.com/mail/u/0/#inbox/${item.id}` : null);
+    openBtn = link
+      ? `<a href="${link}" class="tc-action-btn tc-open-btn" title="Open in Mail">Open ↗</a>`
+      : `<span class="tc-action-btn tc-open-btn" style="opacity:0.35;cursor:default" title="No link">Open</span>`;
+  } else {
+    openBtn = `<a href="${nlink(item.id)}" target="_blank" class="tc-action-btn tc-open-btn" title="Open in Notion">Open ↗</a>`;
+  }
 
   if (inArchive) {
     return `
@@ -285,7 +290,7 @@ export function renderTriageKanban({ items, gmailAvailable, researchAvailable },
         <div class="tc-filters">
           <button class="mood-chip tc-filter ${activeFilter === "all"      ? "selected" : ""}" data-filter="all">all</button>
           <button class="mood-chip tc-filter ${activeFilter === "personal" ? "selected" : ""}" data-filter="personal">personal</button>
-          ${researchAvailable ? `<button class="mood-chip tc-filter ${activeFilter === "research" ? "selected" : ""}" data-filter="research">research</button>` : ""}
+          <button class="mood-chip tc-filter ${activeFilter === "research" ? "selected" : ""}" data-filter="research">research</button>
           <button class="mood-chip tc-filter ${activeFilter === "tasks"    ? "selected" : ""}" data-filter="tasks">tasks</button>
         </div>
         <button class="triage-refresh-btn" id="triage-refresh-btn" title="Refresh">↻</button>

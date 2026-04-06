@@ -1,28 +1,36 @@
 /* ── RESET ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
-  --sand-50:   #FAF8F4;
-  --sand-100:  #F2EDE3;
-  --sand-200:  #E2D8C8;
-  --sand-300:  #C8B99A;
-  --sand-400:  #9E8A6E;
-  --sand-600:  #6E5A42;
-  --sand-800:  #3A2C1C;
-  --moss-100:  #EBF0E5;
-  --moss-500:  #5B7A4D;
-  --moss-700:  #3A5030;
-  --terra-100: #F5EBE4;
-  --terra-400: #C07B5A;
-  --terra-600: #8C4E30;
-  --sky-100:   #E8EEF5;
-  --sky-500:   #5A7B9C;
-  --amber-100: #F5EED8;
-  --amber-500: #B8943A;
-  --red-100:   #F5E8E8;
-  --red-500:   #B85A5A;
-  --purple-100:#F0EEFF;
-  --purple-500:#7B6FD4;
+  /* Neutrals — cool blue-tinted (replaces warm sand) */
+  --sand-50:   #F2F5F9;
+  --sand-100:  #E3EAF3;
+  --sand-200:  #C8D5E8;
+  --sand-300:  #9AAFC5;
+  --sand-400:  #6080A0;
+  --sand-600:  #3A5878;
+  --sand-800:  #1A2F48;
+  /* Dusky blue — primary accent */
+  --moss-100:  #D4E5F5;
+  --moss-500:  #3D78AA;
+  --moss-700:  #225880;
+  /* Faded warm orange — STAT / urgent */
+  --terra-100: #F5E5D5;
+  --terra-400: #C88858;
+  --terra-600: #9A6030;
+  /* Sky blue — research */
+  --sky-100:   #DCE8F8;
+  --sky-500:   #4878B8;
+  /* Faded peach — ASAP / warning */
+  --amber-100: #F8DDD0;
+  --amber-500: #C87858;
+  /* Soft red */
+  --red-100:   #F5E5E5;
+  --red-500:   #B05858;
+  /* Soft purple */
+  --purple-100:#EEEAFF;
+  --purple-500:#7068C8;
 }
 
 html { font-size: 15px; overflow-x: hidden; }
@@ -44,7 +52,7 @@ a:hover { opacity: 0.72; }
 /* ── QUICK LINKS BAR ────────────────────────────────────────────────────── */
 .quicklinks-bar {
   position: sticky; top: 0; z-index: 200;
-  background: rgba(250,248,244,0.94);
+  background: rgba(242,245,249,0.94);
   backdrop-filter: blur(10px);
   border-bottom: 0.5px solid var(--sand-200);
   display: flex; align-items: center; gap: 14px;
@@ -513,12 +521,21 @@ th.nb-td {
 .lane-stat    .tc-col-header { border-color: var(--terra-400); color: var(--terra-600); }
 .lane-asap    .tc-col-header { border-color: var(--amber-500); color: var(--amber-500); }
 .lane-routine .tc-col-header { border-color: var(--moss-500);  color: var(--moss-700); }
+.lane-stat    { background: var(--terra-100); }
+.lane-asap    { background: var(--amber-100); }
+.lane-routine { background: var(--moss-100); }
 .tc-count {
   font-size: 10px; font-weight: 500;
   background: var(--sand-100); color: var(--sand-600);
   padding: 1px 6px; border-radius: 10px;
 }
-.tc-col-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+.tc-col-body {
+  padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  min-height: 60px; max-height: 680px; overflow-y: auto; scroll-behavior: smooth;
+}
+.tc-col-body::-webkit-scrollbar { width: 4px; }
+.tc-col-body::-webkit-scrollbar-track { background: transparent; }
+.tc-col-body::-webkit-scrollbar-thumb { background: var(--sand-200); border-radius: 4px; }
 .tc-col-body.drop-over { background: var(--sand-50); border-radius: 0 0 10px 10px; }
 .tc-empty { font-size: 11px; color: var(--sand-300); font-style: italic; text-align: center; padding: 8px 0; }
 

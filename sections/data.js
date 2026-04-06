@@ -26,6 +26,7 @@ export const IDS = {
   psychopharmPage:   "294f6c38-f95e-80dc-a883-eaf9989ce3d6",
   flashcards:        "27cf6c38-f95e-80f5-b8d4-f8d2652f0882",
   flashcardTemplate: "27df6c38-f95e-81cb-bb86-d381d22b642e",
+  mailCache:         "339f6c38-f95e-8012-ae45-d011bc417648",
   // Pages
   psychiatryPage:    "294f6c38-f95e-804a-b2cc-d86f0276298f",
   commandCenter:     "31ef6c38-f95e-8088-b194-c29b9ceaad09",

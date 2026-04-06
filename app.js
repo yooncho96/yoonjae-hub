@@ -1,4 +1,4 @@
-import { daysUntil, IDS, api, todayStr } from "./sections/data.js";
+import { IDS, api, todayStr } from "./sections/data.js";
 import { loadTriage, renderTriageKanban } from "./sections/triage.js";
 import { initViewer } from "./sections/viewer.js";
 import { initAddForm } from "./sections/addform.js";
@@ -6,7 +6,7 @@ import { loadPsychiatryMatrix, renderPsychiatryMatrix } from "./sections/psychia
 import {
   loadSchedule,  renderSchedule,
   loadStep3,     renderStep3,
-  loadTasks,     renderTasks,
+  loadTasks,
   loadResearch,  renderResearch,
 } from "./sections/sections.js";
 import { loadPets, renderPets } from "./sections/pets.js";
@@ -14,10 +14,6 @@ import { loadPets, renderPets } from "./sections/pets.js";
 // Initialize all shared UI systems first
 initViewer();
 initAddForm(document.getElementById("add-page-btn"));
-
-// Update the Step 3 countdown chip immediately
-const chip = document.getElementById("chip-step3");
-if (chip) chip.textContent = `Step 3 · ${daysUntil("2026-05-09")}d`;
 
 // Update time-of-day greeting
 const h = new Date().getHours();
@@ -103,12 +99,6 @@ const sections = [
     label: "Step 3",
   },
   {
-    load: loadTasks,                  // never cache — task freshness matters
-    render: (data, el) => { renderTasks(data, el); updateSubhead(data); },
-    containerId: "card-tasks",
-    label: "Tasks",
-  },
-  {
     load: withCache("research", loadResearch),
     render: renderResearch,
     containerId: "card-research",
@@ -121,6 +111,9 @@ const sections = [
     label: "Pets",
   },
 ];
+
+// Load tasks for subhead only (no card rendered)
+loadTasks().then(updateSubhead).catch(() => {});
 
 // Load triage (no cache — always fresh)
 const triageEl = document.getElementById("card-triage");
@@ -152,12 +145,14 @@ sections.forEach(({ load, render, containerId, label }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 function updateSubhead(tasks) {
   const t = todayStr();
-  const overdue  = tasks.filter(x => x.due && x.due < t).length;
+  const stat  = tasks.filter(x => ["high","critical"].includes((x.priority||"").toLowerCase())).length;
+  const asap  = tasks.filter(x => (x.priority||"").toLowerCase() === "medium").length;
   const dueToday = tasks.filter(x => x.due === t).length;
   const el = document.getElementById("cc-subhead");
   if (!el) return;
   const parts = [];
-  if (overdue  > 0) parts.push(`${overdue} overdue`);
+  if (stat  > 0) parts.push(`${stat} stat`);
+  if (asap  > 0) parts.push(`${asap} asap`);
   if (dueToday > 0) parts.push(`${dueToday} due today`);
   if (parts.length === 0) parts.push(tasks.length > 0 ? `${tasks.length} open tasks` : "all clear");
   el.textContent = parts.join(" · ");
